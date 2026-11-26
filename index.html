@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Wish Tree</title>
+  <meta name="description" content="A Christmas tree of sealed wishes. Hang yours; it opens on the day.">
+  <meta property="og:title" content="Wish Tree">
+  <meta property="og:description" content="A Christmas tree of sealed wishes. Hang yours; it opens on the day.">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#0b1130">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 3 5 28h22z' fill='%23557833'/%3E%3Ccircle cx='16' cy='5' r='4' fill='%23cf2438'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <!-- Ornament artwork: flat folk-art shapes, drawn for this project. -->
+  <svg class="sprite" aria-hidden="true" focusable="false">
+    <symbol id="o-bow" viewBox="0 0 100 100">
+      <path fill="currentColor" fill-rule="evenodd" d="M49 36C40 24 22 12 12 19C3 26 7 43 17 48C28 53 42 47 49 41ZM42 35C34 29 22 22 17 26C13 31 15 39 21 42C28 45 37 40 42 35Z"/>
+      <path fill="currentColor" fill-rule="evenodd" d="M51 36C60 24 78 12 88 19C97 26 93 43 83 48C72 53 58 47 51 41ZM58 35C66 29 78 22 83 26C87 31 85 39 79 42C72 45 63 40 58 35Z"/>
+      <path fill="currentColor" d="M45 40C42 55 33 70 19 82L29 81L31 92C44 77 52 59 54 43Z"/>
+      <path fill="currentColor" d="M55 40C58 56 68 69 82 79L72 80L71 90C57 77 48 60 46 43Z"/>
+      <path fill="#000" opacity=".22" d="M47 45C45 54 41 61 36 68C44 62 50 53 51 46ZM53 45C55 54 60 61 65 67C57 62 50 53 49 46Z"/>
+      <ellipse cx="50" cy="38" rx="8.5" ry="9.5" fill="currentColor"/>
+      <ellipse cx="50" cy="38" rx="8.5" ry="9.5" fill="#000" opacity=".2"/>
+    </symbol>
+
+    <symbol id="o-bauble-red" viewBox="0 0 100 100">
+      <circle cx="50" cy="12" r="6.5" fill="none" stroke="#c9842f" stroke-width="4"/>
+      <rect x="39" y="17" width="22" height="14" rx="4" fill="#c9842f"/>
+      <circle cx="50" cy="60" r="34" fill="#8f1b1c"/>
+      <path fill="#f9e5c6" d="M18 49H82Q85.5 59 83 68H17Q14.5 59 18 49Z"/>
+      <path fill="#dc9a3a" d="M23 40Q50 44 77 40L79.5 44.5Q50 48 20.5 44.5ZM20.5 73Q50 77 79.5 73L76.5 78Q50 81 23.5 78Z"/>
+      <g fill="#8f1b1c"><circle cx="26" cy="58.5" r="3.2"/><circle cx="74" cy="58.5" r="3.2"/><circle cx="50" cy="58.5" r="3.2"/></g>
+      <path d="M35 55l6 7M41 55l-6 7M59 55l6 7M65 55l-6 7" stroke="#8f1b1c" stroke-width="2.8" stroke-linecap="round"/>
+    </symbol>
+
+    <symbol id="o-bauble-green" viewBox="0 0 100 100">
+      <circle cx="50" cy="12" r="6.5" fill="none" stroke="#c9842f" stroke-width="4"/>
+      <rect x="39" y="17" width="22" height="14" rx="4" fill="#dc9a3a"/>
+      <circle cx="50" cy="60" r="34" fill="#6d9136"/>
+      <path d="M19 59Q26.75 49 34.5 59T50 59T65.5 59T81 59" fill="none" stroke="#f9e5c6" stroke-width="5" stroke-linecap="round"/>
+      <path fill="#a8231f" d="M22 41Q50 45 78 41L80.5 46Q50 50 19.5 46ZM19.5 71Q50 75 80.5 71L78 76.5Q50 80.5 22 76.5Z"/>
+      <g fill="#f9e5c6"><circle cx="34" cy="35" r="2.6"/><circle cx="50" cy="33" r="2.6"/><circle cx="66" cy="35" r="2.6"/><circle cx="38" cy="85" r="2.6"/><circle cx="50" cy="87" r="2.6"/><circle cx="62" cy="85" r="2.6"/></g>
+    </symbol>
+
+    <symbol id="o-star" viewBox="0 0 100 100">
+      <circle cx="50" cy="11" r="6.5" fill="none" stroke="#c9842f" stroke-width="4"/>
+      <path fill="#e3a63f" stroke="#e3a63f" stroke-width="7" stroke-linejoin="round" d="M50 22L61 45L87 48L68 65L73 91L50 78L27 91L32 65L13 48L39 45Z"/>
+      <path d="M50 37v12M66 54l-9 4M61 76l-6-9M39 76l6-9M34 54l9 4" stroke="#a9661f" stroke-width="3.6" stroke-linecap="round"/>
+      <circle cx="50" cy="60" r="4" fill="#fbe3b0"/>
+    </symbol>
+
+    <symbol id="o-bell" viewBox="0 0 100 100">
+      <circle cx="50" cy="11" r="7" fill="none" stroke="#c9842f" stroke-width="4"/>
+      <circle cx="50" cy="84" r="9" fill="#6e3a22"/>
+      <path fill="#e3a63f" d="M50 24C33 24 30 40 29 54C28 66 22 70 17 76H83C78 70 72 66 71 54C70 40 67 24 50 24Z"/>
+      <rect x="14" y="73" width="72" height="9" rx="4.5" fill="#c9842f"/>
+      <path d="M37 47Q36 58 33 65" fill="none" stroke="#fbe3b0" stroke-width="4.5" stroke-linecap="round"/>
+      <use href="#o-bow" x="21" y="9" width="58" height="48" color="#a8231f"/>
+    </symbol>
+
+    <symbol id="o-wreath" viewBox="0 0 100 100">
+      <circle cx="50" cy="55" r="29" fill="none" stroke="#6d9136" stroke-width="18"/>
+      <g fill="#6d9136"><circle cx="50" cy="18" r="10"/><circle cx="68" cy="23" r="10"/><circle cx="81" cy="36" r="10"/><circle cx="86" cy="55" r="10"/><circle cx="81" cy="74" r="10"/><circle cx="68" cy="87" r="10"/><circle cx="50" cy="90" r="10"/><circle cx="32" cy="87" r="10"/><circle cx="19" cy="74" r="10"/><circle cx="14" cy="55" r="10"/><circle cx="19" cy="36" r="10"/><circle cx="32" cy="23" r="10"/></g>
+      <path d="M20 43l8 5M18 66l9-3M34 82l4-8M60 84l-2-9M79 68l-9-3M80 45l-9 4" stroke="#40611f" stroke-width="5" stroke-linecap="round"/>
+      <g fill="#c0302a"><circle cx="20" cy="55" r="4.5"/><circle cx="29" cy="76" r="4.5"/><circle cx="71" cy="77" r="4.5"/><circle cx="81" cy="57" r="4.5"/><circle cx="52" cy="87" r="4.5"/></g>
+      <g fill="#f9e5c6"><circle cx="24" cy="33" r="3.2"/><circle cx="43" cy="82" r="3.2"/><circle cx="82" cy="70" r="3.2"/><circle cx="75" cy="32" r="3.2"/></g>
+      <use href="#o-bow" x="20" y="0" width="60" height="52" color="#a8231f"/>
+    </symbol>
+
+    <symbol id="o-candle" viewBox="0 0 100 100">
+      <path fill="#e3a63f" d="M50 3C58 14 63 20 61 27C59 35 41 35 39 27C37 20 46 14 50 3Z"/>
+      <ellipse cx="50" cy="26" rx="5" ry="6.5" fill="#fbe9bd"/>
+      <rect x="48.5" y="30" width="3" height="8" fill="#6e3a22"/>
+      <rect x="32" y="36" width="36" height="44" rx="6" fill="#f9e5c6"/>
+      <path fill="#40611f" d="M49 62C45 53 37 52 33 55C38 57 37 61 41 61C40 65 45 66 49 62ZM51 62C55 53 63 52 67 55C62 57 63 61 59 61C60 65 55 66 51 62Z"/>
+      <g fill="#a8231f"><circle cx="46" cy="66" r="3.5"/><circle cx="54" cy="66" r="3.5"/><circle cx="50" cy="71" r="3.5"/></g>
+      <rect x="21" y="77" width="58" height="10" rx="5" fill="#8f5130"/>
+      <path fill="#7d4528" d="M42 86H58L62 94Q50 99 38 94Z"/>
+    </symbol>
+
+    <symbol id="o-holly" viewBox="0 0 100 100">
+      <path fill="#6d9136" d="M47 55C40 38 31 38 27 27C23 33 18 31 8 28C12 37 8 42 5 49C14 49 16 55 17 64C24 59 33 66 47 55Z"/>
+      <path fill="#57802b" d="M53 55C60 38 69 38 73 27C77 33 82 31 92 28C88 37 92 42 95 49C86 49 84 55 83 64C76 59 67 66 53 55Z"/>
+      <path d="M43 53Q28 46 15 37M57 53Q72 46 85 37" fill="none" stroke="#b4cc72" stroke-width="2.8" stroke-linecap="round"/>
+      <g fill="#b52824"><circle cx="41" cy="62" r="10.5"/><circle cx="59" cy="62" r="10.5"/><circle cx="50" cy="76" r="10.5"/></g>
+      <g fill="#f4a08e"><circle cx="38" cy="59" r="2.6"/><circle cx="56" cy="59" r="2.6"/><circle cx="47" cy="73" r="2.6"/></g>
+    </symbol>
+
+    <symbol id="o-candycane" viewBox="0 0 100 100">
+      <g transform="rotate(12 50 50)" fill="none" stroke-width="15">
+        <path d="M40 90V34C40 8 74 8 74 33" stroke="#f9e5c6" stroke-linecap="round"/>
+        <path d="M40 90V34C40 8 74 8 74 33" stroke="#b52824" stroke-dasharray="7 11"/>
+      </g>
+      <use href="#o-bow" x="12" y="35" width="52" height="48" color="#6d9136"/>
+    </symbol>
+
+    <symbol id="o-snowflake" viewBox="0 0 100 100">
+      <circle cx="50" cy="9" r="5.5" fill="none" stroke="#c9842f" stroke-width="3.5"/>
+      <g stroke="#fbeed8" stroke-width="6.5" stroke-linecap="round" fill="none">
+        <path d="M50 55V19M50 31l-9-9M50 31l9-9"/>
+        <path d="M50 55V19M50 31l-9-9M50 31l9-9" transform="rotate(60 50 55)"/>
+        <path d="M50 55V19M50 31l-9-9M50 31l9-9" transform="rotate(120 50 55)"/>
+        <path d="M50 55V19M50 31l-9-9M50 31l9-9" transform="rotate(180 50 55)"/>
+        <path d="M50 55V19M50 31l-9-9M50 31l9-9" transform="rotate(240 50 55)"/>
+        <path d="M50 55V19M50 31l-9-9M50 31l9-9" transform="rotate(300 50 55)"/>
+      </g>
+      <circle cx="50" cy="55" r="9" fill="#fbeed8"/>
+    </symbol>
+
+    <symbol id="o-stocking" viewBox="0 0 100 100">
+      <circle cx="62" cy="9" r="6" fill="none" stroke="#c9842f" stroke-width="3.5"/>
+      <path fill="#a8231f" d="M34 24H70V58C70 64 68 68 63 72L42 89C34 95 22 94 17 85C13 77 16 68 24 63L34 55Z"/>
+      <path fill="#f9e5c6" d="M18 69C26 69 35 78 34 91C27 94 20 90 17 85C14 80 15 74 18 69ZM70 52C60 53 54 62 56 77L63 72C68 68 70 64 70 58Z"/>
+      <rect x="28" y="13" width="48" height="18" rx="7" fill="#f9e5c6"/>
+      <path fill="#40611f" d="M50 45C46 37 40 37 36 40C40 42 40 45 43 45C43 48 47 49 50 45ZM52 45C55 37 61 37 65 40C62 42 62 45 59 45C59 48 55 49 52 45Z"/>
+      <g fill="#fbb8a2"><circle cx="47" cy="50" r="3.2"/><circle cx="55" cy="50" r="3.2"/><circle cx="51" cy="55" r="3.2"/></g>
+    </symbol>
+
+    <symbol id="o-gift" viewBox="0 0 100 100">
+      <rect x="18" y="45" width="64" height="48" rx="5" fill="#627f30"/>
+      <rect x="12" y="32" width="76" height="18" rx="5" fill="#7c9d3f"/>
+      <g fill="#f9e5c6"><circle cx="28" cy="60" r="3"/><circle cx="34" cy="78" r="3"/><circle cx="68" cy="62" r="3"/><circle cx="73" cy="80" r="3"/><circle cx="24" cy="41" r="2.6"/><circle cx="76" cy="41" r="2.6"/></g>
+      <rect x="43" y="32" width="14" height="61" fill="#a8231f"/>
+      <use href="#o-bow" x="19" y="1" width="62" height="52" color="#b52824"/>
+    </symbol>
+  </svg>
+
+  <canvas id="snow" aria-hidden="true"></canvas>
+
+  <header class="topbar">
+    <a class="brand" id="home-link" href="./">Wish Tree</a>
+    <button type="button" class="btn btn-quiet" id="lang-btn" data-i18n="lang_switch"></button>
+  </header>
+
+  <main>
+    <p id="loading" class="status" role="status" data-i18n="loading"></p>
+
+    <section id="view-message" class="panel center" aria-labelledby="message-title" hidden>
+      <h1 id="message-title"></h1>
+      <p id="message-body"></p>
+      <div class="actions">
+        <button type="button" class="btn btn-primary" id="message-retry" data-i18n="retry" hidden></button>
+        <a class="btn btn-glass" href="?view=me" data-i18n="make_own"></a>
+      </div>
+    </section>
+
+    <section id="view-tree" aria-labelledby="owner-name" hidden>
+      <div class="tree-head">
+        <p class="kicker" data-i18n="kicker"></p>
+        <h1 id="owner-name"></h1>
+        <p class="explain" id="explain"></p>
+      </div>
+
+      <nav id="tabs" class="tabs" data-i18n-label="tabs_label" hidden></nav>
+
+      <div class="tree-wrap">
+        <svg id="tree" viewBox="40 170 740 990" role="group" data-i18n-label="tree_label">
+          <g id="foliage" aria-hidden="true"></g>
+          <svg x="312" y="164" width="170" height="196" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><use href="#o-bow" width="100" height="100" color="#d2273b"/></svg>
+          <g id="ornaments"></g>
+        </svg>
+      </div>
+
+      <p class="count" id="count" role="status"></p>
+
+      <div class="countdown" id="countdown" role="timer" data-i18n-label="countdown_label">
+        <div><b id="cd-d">0</b><span data-i18n="days"></span></div>
+        <div><b id="cd-h">00</b><span data-i18n="hours"></span></div>
+        <div><b id="cd-m">00</b><span data-i18n="minutes"></span></div>
+        <div><b id="cd-s">00</b><span data-i18n="seconds"></span></div>
+      </div>
+      <p class="opens" id="opens" hidden></p>
+
+      <div class="actions">
+        <button type="button" class="btn btn-primary" id="wish-btn" data-i18n="send_wish"></button>
+        <button type="button" class="btn btn-glass" id="copy-btn" data-i18n="copy_link"></button>
+        <a class="btn btn-quiet" id="make-link" href="?view=me" data-i18n="make_own"></a>
+      </div>
+
+      <p class="status" id="cards-status" role="status" hidden></p>
+      <ol id="cards" class="cards" data-i18n-label="cards_label" hidden></ol>
+    </section>
+
+    <section id="view-signin" class="panel" aria-labelledby="signin-title" hidden>
+      <h1 id="signin-title" data-i18n="signin_title"></h1>
+      <p data-i18n="signin_intro"></p>
+
+      <form id="email-form" novalidate>
+        <label for="email" data-i18n="email"></label>
+        <input id="email" type="email" autocomplete="email" required>
+        <button class="btn btn-primary" type="submit" data-i18n="send_link"></button>
+      </form>
+      <div id="email-sent" role="status" hidden>
+        <h2 data-i18n="check_email"></h2>
+        <p id="email-sent-body"></p>
+      </div>
+
+      <button type="button" class="btn btn-glass" id="google-btn" data-i18n="google" hidden></button>
+
+      <div id="phone-block" hidden>
+        <form id="phone-form" novalidate>
+          <label for="phone" data-i18n="phone"></label>
+          <input id="phone" type="tel" autocomplete="tel" placeholder="+84901234567" required>
+          <button class="btn btn-glass" type="submit" data-i18n="send_code"></button>
+        </form>
+        <form id="otp-form" novalidate hidden>
+          <label for="otp" data-i18n="code"></label>
+          <input id="otp" inputmode="numeric" autocomplete="one-time-code" required>
+          <button class="btn btn-primary" type="submit" data-i18n="verify_code"></button>
+        </form>
+      </div>
+
+      <p class="error" id="signin-error" role="alert" hidden></p>
+      <a class="back" id="back-link" href="./" data-i18n="back"></a>
+    </section>
+
+    <section id="view-me" class="panel" aria-labelledby="me-title" hidden>
+      <h1 id="me-title" data-i18n="me_title"></h1>
+
+      <form id="create-form" novalidate hidden>
+        <p data-i18n="create_intro"></p>
+        <label for="f-name" data-i18n="f_name"></label>
+        <input id="f-name" maxlength="60" autocomplete="name" required>
+        <label for="f-slug" data-i18n="f_slug"></label>
+        <input id="f-slug" maxlength="40" autocapitalize="none" autocorrect="off" spellcheck="false" aria-describedby="slug-preview" required>
+        <p class="hint" id="slug-preview"></p>
+        <label for="f-date" data-i18n="f_date"></label>
+        <input id="f-date" type="date" required>
+        <p class="error" id="create-error" role="alert" hidden></p>
+        <button class="btn btn-primary" type="submit" id="create-btn" data-i18n="create"></button>
+      </form>
+
+      <div id="my-tree" hidden>
+        <p data-i18n="share_intro"></p>
+        <label for="share-url" data-i18n="your_link"></label>
+        <input id="share-url" readonly>
+        <div class="actions">
+          <button type="button" class="btn btn-primary" id="share-copy" data-i18n="copy_link"></button>
+          <a class="btn btn-glass" id="share-open" data-i18n="open_tree"></a>
+        </div>
+        <dl class="stats">
+          <div><dt data-i18n="stat_wishes"></dt><dd id="stat-count">–</dd></div>
+          <div><dt data-i18n="stat_date"></dt><dd id="stat-date"></dd></div>
+        </dl>
+      </div>
+
+      <p class="error" id="me-error" role="alert" hidden></p>
+      <button type="button" class="btn btn-quiet" id="signout-btn" data-i18n="sign_out"></button>
+    </section>
+  </main>
+
+  <dialog id="wish-dialog" aria-labelledby="wish-title">
+    <div class="sheet">
+      <button type="button" class="close" id="wish-close" data-i18n-label="close">&times;</button>
+      <form id="wish-form" novalidate>
+        <h2 id="wish-title" data-i18n="send_wish"></h2>
+        <label for="w-name" data-i18n="w_name"></label>
+        <input id="w-name" maxlength="60" autocomplete="name" data-i18n-ph="w_name_ph">
+        <label for="w-message" data-i18n="w_message"></label>
+        <textarea id="w-message" maxlength="600" rows="4" required data-i18n-ph="w_message_ph" aria-describedby="w-count"></textarea>
+        <p class="hint counter" id="w-count">0 / 600</p>
+        <p class="legend" id="picker-label" data-i18n="w_ornament"></p>
+        <div class="picker" id="picker" role="radiogroup" aria-labelledby="picker-label"></div>
+        <p class="error" id="wish-error" role="alert" hidden></p>
+        <button class="btn btn-primary wide" type="submit" id="wish-submit" data-i18n="hang"></button>
+      </form>
+      <div id="wish-done" class="center" hidden>
+        <svg class="done-orn" viewBox="0 0 100 100" aria-hidden="true"><use id="done-use" href="#o-bow" width="100" height="100" color="#b52824"/></svg>
+        <h2 data-i18n="done_title" tabindex="-1" id="done-title"></h2>
+        <p id="done-body"></p>
+        <button type="button" class="btn btn-primary" id="done-close" data-i18n="done_close"></button>
+      </div>
+    </div>
+  </dialog>
+
+  <noscript><p class="status">Wish Tree needs JavaScript. / Wish Tree cần JavaScript.</p></noscript>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/config.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>

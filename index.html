@@ -142,7 +142,9 @@
   <canvas id="snow" aria-hidden="true"></canvas>
 
   <header class="topbar">
-    <a class="brand" id="home-link" href="./">Wish Tree</a>  </header>
+    <a class="brand" id="home-link" href="./">Wish Tree</a>
+    <a class="btn btn-quiet" href="?view=forest" data-i18n="forest_link"></a>
+  </header>
 
   <main>
     <p id="loading" class="status" role="status" data-i18n="loading"></p>
@@ -158,9 +160,14 @@
 
     <section id="view-tree" aria-labelledby="owner-name" hidden>
       <div class="tree-head">
-        <p class="kicker" data-i18n="kicker"></p>
+        <p class="kicker" id="tree-kicker" data-i18n="kicker"></p>
         <h1 id="owner-name"></h1>
         <p class="explain" id="explain"></p>
+      </div>
+
+      <div id="circles" class="tabs circles" role="group" data-i18n-label="circle_label" hidden>
+        <button type="button" class="tab" data-circle="friends" data-i18n="circle_friends"></button>
+        <button type="button" class="tab" data-circle="strangers" data-i18n="circle_strangers"></button>
       </div>
 
       <nav id="tabs" class="tabs" data-i18n-label="tabs_label" hidden></nav>
@@ -187,10 +194,40 @@
         <button type="button" class="btn btn-primary" id="wish-btn" data-i18n="send_wish"></button>
         <button type="button" class="btn btn-glass" id="copy-btn" data-i18n="copy_link"></button>
         <a class="btn btn-quiet" id="make-link" href="?view=me" data-i18n="make_own"></a>
+        <a class="btn btn-quiet" href="?view=forest" data-i18n="forest_link"></a>
       </div>
 
       <p class="status" id="cards-status" role="status" hidden></p>
       <ol id="cards" class="cards" data-i18n-label="cards_label" hidden></ol>
+    </section>
+
+    <section id="view-forest" aria-labelledby="forest-title" hidden>
+      <div class="tree-head">
+        <p class="kicker" data-i18n="forest_kicker"></p>
+        <h1 id="forest-title" data-i18n="forest_title"></h1>
+        <p class="forest-count" id="forest-count" role="status"></p>
+      </div>
+      <p class="status" id="forest-status" role="status" hidden></p>
+      <div class="forest-wrap" id="forest-wrap">
+        <svg id="forest" viewBox="0 90 1000 500" role="group" data-i18n-label="forest_label">
+          <defs>
+            <linearGradient id="hill-far" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2a3566"/><stop offset="1" stop-color="#1a2350"/></linearGradient>
+            <linearGradient id="hill-near" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9e4f2"/><stop offset="1" stop-color="#b7bcd9"/></linearGradient>
+          </defs>
+          <path d="M0 250Q160 200 330 240T660 225T1000 245V590H0Z" fill="url(#hill-far)" aria-hidden="true"/>
+          <path d="M0 400Q200 360 420 390T780 375T1000 390V590H0Z" fill="url(#hill-near)" opacity=".16" aria-hidden="true"/>
+          <g id="forest-trees"></g>
+          <path d="M0 560Q250 535 500 552T1000 548V590H0Z" fill="url(#hill-near)" opacity=".85" aria-hidden="true"/>
+        </svg>
+        <p class="forest-tip" id="forest-tip" hidden></p>
+      </div>
+      <div class="actions">
+        <a class="btn btn-primary" href="?view=me" data-i18n="forest_plant"></a>
+      </div>
+      <div id="forest-list-wrap" hidden>
+        <h2 class="forest-list-title" data-i18n="forest_list"></h2>
+        <ul class="forest-list" id="forest-list"></ul>
+      </div>
     </section>
 
     <section id="view-signin" class="panel" aria-labelledby="signin-title" hidden>
@@ -262,8 +299,11 @@
       <button type="button" class="close" id="wish-close" data-i18n-label="close">&times;</button>
       <form id="wish-form" novalidate>
         <h2 id="wish-title" data-i18n="send_wish"></h2>
-        <label for="w-name" data-i18n="w_name"></label>
-        <input id="w-name" maxlength="60" autocomplete="name" data-i18n-ph="w_name_ph">
+        <div id="w-name-block" class="field-group">
+          <label for="w-name" data-i18n="w_name"></label>
+          <input id="w-name" maxlength="60" autocomplete="name" data-i18n-ph="w_name_ph">
+        </div>
+        <p class="hint" id="w-anon-note" data-i18n="w_anon_note" hidden></p>
         <label for="w-message" data-i18n="w_message"></label>
         <textarea id="w-message" maxlength="600" rows="4" required data-i18n-ph="w_message_ph" aria-describedby="w-count"></textarea>
         <p class="hint counter" id="w-count">0 / 600</p>

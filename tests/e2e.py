@@ -34,6 +34,9 @@ class Fake:
         self.fail_insert = False
         self.inserts = []
         self.wish_reads = []
+        self.forest = [{"slug": "demo", "owner_name": "Hàn Hân", "wishes": wishes, "planted_at": "2026-11-26T00:00:00Z"}] + [
+            {"slug": f"tree-{i}", "owner_name": XSS if i == 3 else f"Person {i}", "wishes": i % 9,
+             "planted_at": "2026-11-27T00:00:00Z"} for i in range(40)]
 
     def row(self):
         return {**self.tree, "reveal_at": self.reveal.isoformat()}
@@ -52,10 +55,14 @@ class Fake:
         if req.method == "OPTIONS":
             return reply(None)
         path = url.path
-        if path == "/rest/v1/rpc/wish_count":
-            return reply(len(self.wishes))
-        if path == "/rest/v1/rpc/wish_ornaments":
-            return reply([{"ornament": w["ornament"]} for w in self.wishes])
+        if path in ("/rest/v1/rpc/wish_count", "/rest/v1/rpc/wish_ornaments"):
+            circle = (req.post_data_json or {}).get("p_circle", "friends")
+            mine = [w for w in self.wishes if w.get("circle", "friends") == circle]
+            if path.endswith("wish_count"):
+                return reply(len(mine))
+            return reply([{"ornament": w["ornament"]} for w in mine])
+        if path == "/rest/v1/rpc/forest":
+            return reply(self.forest)
         if path == "/rest/v1/trees" and req.method == "GET":
             ok = self.has_tree and (q.get("slug") == "eq.demo" or q.get("owner_id") == "eq.u1")
             return reply([self.row()] if ok else [])
@@ -71,7 +78,9 @@ class Fake:
             if datetime.now(timezone.utc) < self.reveal:
                 return reply([])
             start, size = int(q.get("offset", 0)), int(q.get("limit", 1000))
-            return reply(self.wishes[start:start + size])
+            circle = q.get("circle", "eq.friends").removeprefix("eq.")
+            mine = [w for w in self.wishes if w.get("circle", "friends") == circle]
+            return reply(mine[start:start + size])
         if path == "/rest/v1/wishes" and req.method == "POST":
             if self.fail_insert:
                 return reply({"message": "boom"}, 500)
@@ -103,10 +112,14 @@ def local_file(email_login=False):
 def open_page(browser, fake, query="?t=demo", width=390, height=844, signed_in=False, email_login=False, **ctx):
     context = browser.new_context(viewport={"width": width, "height": height}, **ctx)
     context.route(SITE + "**", local_file(email_login))
+    import os
+    umd = os.environ.get("SUPABASE_UMD")
+    if umd:  # offline copy when the CDN is unreachable
+        context.route("https://cdn.jsdelivr.net/**", lambda r: r.fulfill(content_type="text/javascript", body=open(umd, "rb").read()))
     context.route(API + "/**", fake.handle)
     if signed_in:
         token = {"access_token": "x.y.z", "refresh_token": "r", "token_type": "bearer", "expires_in": 3600,
-                 "expires_at": int(time.time()) + 3600, "user": {"id": "u1", "aud": "authenticated"}}
+                 "expires_at": int(time.time()) + 86400 * 120, "user": {"id": "u1", "aud": "authenticated"}}
         context.add_init_script(
             f"localStorage.setItem('sb-tcrtkzqqcpzksjzbtiew-auth-token', {json.dumps(json.dumps(token))});")
     page = context.new_page()
@@ -205,7 +218,7 @@ with sync_playwright() as p:
     send(page, "  nine  ")
     expect(page.locator("#wish-done")).to_be_visible()
     expect(page.locator("#done-body")).to_contain_text("Sealed")
-    assert fake.inserts[-1] == {"tree_id": "t1", "display_name": None, "message": "nine", "ornament": "bow"}
+    assert fake.inserts[-1] == {"tree_id": "t1", "display_name": None, "message": "nine", "ornament": "bow", "circle": "friends"}
     shot(page, "done-mobile")
     page.click("#done-close")
     send(page, "ten", name="  Mai ", ornament="star")
@@ -215,19 +228,19 @@ with sync_playwright() as p:
     expect(page.locator("#tabs")).to_be_hidden()
     send(page, "eleven", ornament="gift")
     expect(page.locator("#tabs .tab")).to_have_count(2)
-    expect(page.locator(".tab").nth(1)).to_have_attribute("aria-pressed", "true")
+    expect(page.locator("#tabs .tab").nth(1)).to_have_attribute("aria-pressed", "true")
     expect(page.locator("#ornaments .slot")).to_have_count(1)
     expect(page.locator("#ornaments .slot")).to_have_attribute("data-ornament", "gift")
     expect(page.locator("#count")).to_have_text("11 wishes")
     page.click("#done-close")
-    page.locator(".tab").first.click()
+    page.locator("#tabs .tab").first.click()
     expect(page.locator("#ornaments .slot")).to_have_count(10)
     assert fake.wish_reads == []
     done(page, "wish form, failure path, eleventh wish opens tree 2")
 
     # Revealed tree
     fake = Fake(wishes=23, opens_in=-60)
-    page = open_page(browser, fake)
+    page = open_page(browser, fake, signed_in=True)
     expect(page.locator(".card")).to_have_count(10)
     expect(page.locator("#countdown")).to_be_hidden()
     expect(page.locator("#explain")).to_contain_text("The tree is open")
@@ -243,8 +256,8 @@ with sync_playwright() as p:
     expect(page.locator("#wish-4")).to_have_class("card flash")
     page.locator("#ornaments .slot").nth(6).click()
     expect(page.locator("#wish-6")).to_be_focused()
-    expect(page.locator(".tab")).to_have_count(3)
-    page.locator(".tab").nth(2).click()
+    expect(page.locator("#tabs .tab")).to_have_count(3)
+    page.locator("#tabs .tab").nth(2).click()
     expect(page.locator(".card")).to_have_count(3)
     expect(page.locator("#ornaments .slot")).to_have_count(3)
     expect(page.locator(".card .message").first).to_contain_text("Wish number 21.")
@@ -255,16 +268,60 @@ with sync_playwright() as p:
 
     # Countdown reaching zero while open
     fake = Fake(wishes=3, opens_in=3)
-    page = open_page(browser, fake)
+    page = open_page(browser, fake, signed_in=True)
     expect(page.locator("#countdown")).to_be_visible()
     expect(page.locator(".card")).to_have_count(3, timeout=15000)
     expect(page.locator("#countdown")).to_be_hidden()
     done(page, "reveals itself without a refresh")
 
+    # The forest: one pine per tree, names never parsed as HTML, links go to the strangers' tree
+    fake = Fake(wishes=4)
+    page = open_page(browser, fake, query="?view=forest")
+    expect(page.locator("#forest-count")).to_have_text("41 trees planted")
+    expect(page.locator("#forest-trees .pine")).to_have_count(41)
+    expect(page.locator("#forest-list a")).to_have_count(41)
+    expect(page.locator("#forest-list span", has_text=XSS)).to_have_count(1)
+    expect(page.locator("#view-forest img")).to_have_count(0)
+    page.locator("#forest-trees .pine").first.hover()
+    expect(page.locator("#forest-tip")).to_be_visible()
+    assert "from=forest" in page.locator("#forest-trees .pine").first.get_attribute("href")
+    shot(page, "forest-mobile", full_page=True)
+    done(page, "forest view")
+
+    # A stranger from the forest: anonymous only, lands on the strangers' tree
+    fake = Fake(wishes=4)
+    page = open_page(browser, fake, query="?t=demo&from=forest")
+    expect(page.locator("#count")).to_have_text("No wishes yet")
+    expect(page.locator("#tree-kicker")).to_have_text("A stranger's wish for")
+    expect(page.locator("#circles")).to_be_hidden()
+    page.click("#wish-btn")
+    expect(page.locator("#w-name")).to_be_hidden()
+    expect(page.locator("#w-anon-note")).to_be_visible()
+    page.fill("#w-message", "hello stranger")
+    page.click("#wish-submit")
+    expect(page.locator("#wish-done")).to_be_visible()
+    assert fake.inserts[-1] == {"tree_id": "t1", "display_name": None, "message": "hello stranger", "ornament": "bow", "circle": "strangers"}
+    expect(page.locator("#count")).to_have_text("1 wish")
+    done(page, "stranger wish from the forest")
+
+    # Owner flips between the two trees after opening day
+    fake = Fake(wishes=5, opens_in=-60)
+    fake.wishes.append({"id": "s1", "display_name": None, "message": "from afar", "ornament": "star", "circle": "strangers"})
+    page = open_page(browser, fake, signed_in=True)
+    expect(page.locator("#circles")).to_be_visible()
+    expect(page.locator(".card")).to_have_count(5)
+    page.click("#circles [data-circle=strangers]")
+    expect(page.locator(".card")).to_have_count(1)
+    expect(page.locator(".card .message")).to_have_text("from afar")
+    page.click("#circles [data-circle=friends]")
+    expect(page.locator(".card")).to_have_count(5)
+    shot(page, "owner-circles", full_page=True)
+    done(page, "owner switches between friends and strangers")
+
     # Device clock ahead of the server: stays sealed, retries
     fake = Fake(wishes=3, opens_in=7)
     fake.tree["slug"] = "demo"
-    page = open_page(browser, fake, query="?t=nope")
+    page = open_page(browser, fake, query="?t=nope", signed_in=True)
     page.clock.set_fixed_time(datetime.now(timezone.utc) + timedelta(days=60))
     page.goto(SITE + "?t=demo")
     expect(page.locator("#explain")).to_contain_text("Opening")

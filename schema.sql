@@ -20,14 +20,17 @@ create table public.wishes (
   message      text not null,
   created_at   timestamptz not null default now(),
   ornament     text not null default 'bow',
+  circle       text not null default 'friends', -- 'friends' via a shared link, 'strangers' via the forest
   constraint wishes_message_len check (char_length(btrim(message)) between 1 and 600),
   constraint wishes_name_len check (display_name is null or char_length(display_name) <= 60),
   constraint wishes_ornament_known check (ornament in (
     'bow', 'bauble-red', 'bauble-green', 'star', 'bell', 'wreath',
-    'candle', 'holly', 'candycane', 'snowflake', 'stocking', 'gift'))
+    'candle', 'holly', 'candycane', 'snowflake', 'stocking', 'gift')),
+  constraint wishes_circle_known check (circle in ('friends', 'strangers')),
+  constraint wishes_strangers_anonymous check (circle = 'friends' or display_name is null)
 );
 
-create index wishes_tree_idx on public.wishes (tree_id, created_at);
+create index wishes_tree_idx on public.wishes (tree_id, circle, created_at);
 
 -- Row Level Security --------------------------------------------------------
 
@@ -68,30 +71,44 @@ create policy "owner reads own wishes after reveal" on public.wishes
 -- Both are security definer on purpose: one returns a number, the other a list of
 -- decoration ids. Neither returns a name or a message.
 
-create or replace function public.wish_count(p_slug text)
+create or replace function public.wish_count(p_slug text, p_circle text default 'friends')
 returns integer
 language sql stable security definer
 set search_path to 'public'
 as $$
   select count(*)::int
   from public.wishes w join public.trees t on t.id = w.tree_id
-  where t.slug = p_slug
+  where t.slug = p_slug and w.circle = p_circle
 $$;
 
-create or replace function public.wish_ornaments(p_slug text)
+create or replace function public.wish_ornaments(p_slug text, p_circle text default 'friends')
 returns table (ornament text)
 language sql stable security definer
 set search_path to 'public'
 as $$
   select w.ornament
-  from public.wishes w
-  join public.trees t on t.id = w.tree_id
-  where t.slug = p_slug
+  from public.wishes w join public.trees t on t.id = w.tree_id
+  where t.slug = p_slug and w.circle = p_circle
   order by w.created_at asc
   limit 500
 $$;
 
-revoke all on function public.wish_count(text) from public;
-revoke all on function public.wish_ornaments(text) from public;
-grant execute on function public.wish_count(text) to anon, authenticated, service_role;
-grant execute on function public.wish_ornaments(text) to anon, authenticated, service_role;
+-- The forest: every tree's public name and link, with its total wish count.
+create or replace function public.forest()
+returns table (slug text, owner_name text, wishes integer, planted_at timestamptz)
+language sql stable security definer
+set search_path to 'public'
+as $$
+  select t.slug, t.owner_name, count(w.id)::int, t.created_at
+  from public.trees t left join public.wishes w on w.tree_id = t.id
+  group by t.id
+  order by t.created_at asc
+  limit 2000
+$$;
+
+revoke all on function public.wish_count(text, text) from public;
+revoke all on function public.wish_ornaments(text, text) from public;
+revoke all on function public.forest() from public;
+grant execute on function public.wish_count(text, text) to anon, authenticated, service_role;
+grant execute on function public.wish_ornaments(text, text) to anon, authenticated, service_role;
+grant execute on function public.forest() to anon, authenticated, service_role;

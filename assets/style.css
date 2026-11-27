@@ -282,3 +282,30 @@ body:has(dialog[open]) { overflow: hidden; }
   .opens { display: none; }
   .tree-wrap { width: min(100%, calc((100dvh - 392px) * 0.747)); min-width: 186px; }
 }
+
+/* ---------- forest ---------- */
+
+.forest-count { font: 600 1.35rem var(--serif); color: var(--gold); margin: 0; }
+.forest-wrap { position: relative; margin: 18px -16px 0; }
+#forest { display: block; width: 100%; height: auto; }
+.pine { cursor: pointer; outline: none; }
+.pine g { transition: transform 0.25s ease, filter 0.25s ease; transform-box: fill-box; transform-origin: 50% 100%; }
+.pine:hover g, .pine:focus-visible g { transform: scale(1.12); filter: drop-shadow(0 0 6px rgba(236, 189, 98, 0.7)); opacity: 1; }
+.pine-star { filter: drop-shadow(0 0 3px rgba(236, 189, 98, 0.8)); }
+.forest-tip {
+  position: absolute; transform: translate(-50%, calc(-100% - 8px)); pointer-events: none; margin: 0;
+  padding: 6px 12px; border-radius: 12px; background: rgba(3, 7, 26, 0.85); border: 1px solid var(--line);
+  white-space: nowrap; font-size: 0.82rem; color: var(--mist); text-align: center;
+}
+.forest-tip b { display: block; color: var(--snow); font: 600 1rem var(--serif); }
+.forest-list-title { font-size: 1.4rem; text-align: center; margin-top: 32px; }
+.forest-list { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-height: 320px; overflow-y: auto; }
+.forest-list a {
+  display: inline-flex; align-items: baseline; gap: 8px; min-height: 40px; padding: 8px 14px;
+  border-radius: 999px; background: var(--glass); border: 1px solid var(--line); color: var(--snow); text-decoration: none;
+}
+.forest-list a:hover { background: rgba(255, 255, 255, 0.12); }
+.forest-list small { color: var(--mist); }
+@media (prefers-reduced-motion: reduce) { .pine g { transition: none; } }
+.field-group { display: flex; flex-direction: column; }
+.circles { padding-bottom: 0; }

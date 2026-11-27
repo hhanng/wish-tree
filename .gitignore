@@ -5,3 +5,4 @@ __pycache__/
 .serena/
 # third-party art, local only
 reference/*.png
+.vercel

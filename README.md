@@ -6,7 +6,7 @@ account. They pick an ornament and watch it appear on the tree. Nobody can read 
 until the opening day you chose (Christmas Day by default), when the tree opens and shows
 them all.
 
-**Live:** https://vuhanhan.com/wish-tree/
+**Live:** https://wish-tree-pi.vercel.app/
 
 ## How the secret holds
 
@@ -54,6 +54,11 @@ Neither returns a name or a message.
 
 The full schema is in [schema.sql](schema.sql).
 
+## Hosting
+
+Served by Vercel as plain static files (no build). `.vercelignore` keeps tests, docs and
+references off the site. The GitHub Pages copy redirects to Vercel.
+
 ## Run it locally
 
 Static files, no build step.
@@ -78,7 +83,7 @@ redirect URLs.
 | Phone SMS code | configure a paid SMS provider in Supabase, set `ENABLE_PHONE: true` |
 
 In Supabase → Authentication → URL Configuration, set the site URL to the deployed address
-and add `https://vuhanhan.com/wish-tree/**` to the redirect URLs.
+and add `https://wish-tree-pi.vercel.app/**` to the redirect URLs.
 
 ## Files
 

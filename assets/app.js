@@ -576,6 +576,8 @@ function signInView(linkFailed) {
   if (linkFailed) setText(errorBox, 'link_expired');
   if (params.get('t')) $('back-link').href = treeUrl(params.get('t'));
 
+  if (CFG.ENABLE_EMAIL) $('email-form').hidden = false;
+
   $('email-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const input = $('email'), email = input.value.trim();
@@ -591,6 +593,8 @@ function signInView(linkFailed) {
 
   if (CFG.ENABLE_GOOGLE) {
     $('google-btn').hidden = false;
+    // With no email form above it, Google is the main action, not an alternative.
+    if (!CFG.ENABLE_EMAIL) $('google-btn').classList.replace('btn-glass', 'btn-primary');
     $('google-btn').addEventListener('click', async () => {
       const { error } = await db.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: redirect } });
       if (error) fail(error);

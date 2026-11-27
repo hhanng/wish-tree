@@ -4,6 +4,7 @@ Run:  python3 tests/e2e.py [screenshot_dir]
 Needs Playwright for Python. No server and no real database: both are intercepted.
 """
 import json
+import re
 import sys
 import time
 from datetime import datetime, timedelta, timezone
@@ -83,18 +84,25 @@ class Fake:
         return reply({"message": "unexpected " + path}, 404)
 
 
-def local_file(route):
-    rel = urlparse(route.request.url).path.removeprefix("/wish-tree/") or "index.html"
-    file = ROOT / rel
-    if not file.is_file():
-        return route.fulfill(status=404, body="")
-    route.fulfill(content_type=TYPES.get(file.suffix, "application/octet-stream") + "; charset=utf-8",
-                  body=file.read_bytes())
+def local_file(email_login=False):
+    """Serve the real site files. email_login flips ENABLE_EMAIL on so the magic
+    link flow stays covered while the shipped config keeps it off."""
+    def handler(route):
+        rel = urlparse(route.request.url).path.removeprefix("/wish-tree/") or "index.html"
+        file = ROOT / rel
+        if not file.is_file():
+            return route.fulfill(status=404, body="")
+        body = file.read_bytes()
+        if email_login and file.name == "config.js":
+            body = body.replace(b"ENABLE_EMAIL: false", b"ENABLE_EMAIL: true")
+        route.fulfill(content_type=TYPES.get(file.suffix, "application/octet-stream") + "; charset=utf-8",
+                      body=body)
+    return handler
 
 
-def open_page(browser, fake, query="?t=demo", width=390, height=844, signed_in=False, **ctx):
+def open_page(browser, fake, query="?t=demo", width=390, height=844, signed_in=False, email_login=False, **ctx):
     context = browser.new_context(viewport={"width": width, "height": height}, **ctx)
-    context.route(SITE + "**", local_file)
+    context.route(SITE + "**", local_file(email_login))
     context.route(API + "/**", fake.handle)
     if signed_in:
         token = {"access_token": "x.y.z", "refresh_token": "r", "token_type": "bearer", "expires_in": 3600,
@@ -293,9 +301,14 @@ with sync_playwright() as p:
     # Sign in
     page = open_page(browser, Fake(), query="?view=me&t=demo")
     expect(page.locator("#google-btn")).to_be_visible()
+    expect(page.locator("#google-btn")).to_have_class(re.compile(r"\bbtn-primary\b"))
+    expect(page.locator("#email-form")).to_be_hidden()
     expect(page.locator("#phone-block")).to_be_hidden()
     expect(page.locator("#back-link")).to_have_attribute("href", SITE + "?t=demo")
     shot(page, "signin-mobile")
+    done(page, "Google is the only way in")
+
+    page = open_page(browser, Fake(), query="?view=me&t=demo", email_login=True)
     page.fill("#email", "nope")
     page.click("#email-form button")
     expect(page.locator("#signin-error")).to_have_text("Enter a valid email address.")
@@ -305,7 +318,7 @@ with sync_playwright() as p:
     assert "redirect_to=https%3A%2F%2Fhhanng.github.io%2Fwish-tree%2F%3Fview%3Dme" in sent.value.url, sent.value.url
     expect(page.locator("#email-sent-body")).to_contain_text("owner@example.com")
     done(page, "magic link request and check-your-email state")
-    page = open_page(browser, Fake(), query="#error=access_denied&error_code=otp_expired")
+    page = open_page(browser, Fake(), query="#error=access_denied&error_code=otp_expired", email_login=True)
     expect(page.locator("#signin-error")).to_contain_text("expired")
     page.errors.clear()
     done(page, "expired link message")

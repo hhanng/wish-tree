@@ -11,6 +11,7 @@ const STR = {
   kicker: 'The tree of', title: '{name} — Wish Tree',
   explain_sealed: 'Wishes stay sealed until opening day.',
   explain_open: 'The tree is open.',
+  explain_open_guest: 'The tree is open. Only {name} can read the wishes.',
   explain_opening: 'Opening…',
   tabs_label: 'Choose a tree', tab: 'Tree {n}', tree_label: 'Christmas tree with wishes hanging on it',
   count_zero: 'No wishes yet', count_one: '1 wish', count_many: '{n} wishes',
@@ -24,7 +25,7 @@ const STR = {
   w_name: 'Your name', w_name_ph: 'Blank = anonymous', w_message: 'Your wish', w_message_ph: 'Write your wish',
   w_ornament: 'Pick an ornament', hang: 'Hang it on the tree', sending: 'Hanging…',
   wish_empty: 'Write your wish first.', wish_failed: 'Your wish was not saved. Check your connection and try again.',
-  done_title: 'Your wish is on the tree', done_sealed: 'Sealed until {date}.', done_open: 'The tree is open, so it can be read now.', done_close: 'Back to the tree',
+  done_title: 'Your wish is on the tree', done_sealed: 'Sealed until {date}.', done_open: 'The tree is open, so it can be read now.', done_open_guest: 'Only the owner can read it.', done_close: 'Back to the tree',
   signin_title: 'Plant your tree',
   email: 'Email', send_link: 'Email me a link', sending_link: 'Sending…',
   check_email: 'Check your inbox', link_sent: 'We sent a link to {email}.',
@@ -303,6 +304,12 @@ async function openTree() {
   try {
     await loadSealed();
     state.page = Math.min(state.page, treeCount(state.count) - 1);
+    // Only the owner may read wishes (Row Level Security enforces it); visitors see the open tree without cards.
+    if (!state.isOwner) {
+      state.open = true;
+      renderTree({ pop: 'all' });
+      return;
+    }
     const rows = await fetchRows(state.page);
     // A fast device clock: the server still says sealed, so wait and ask again.
     if (state.count > 0 && rows.length === 0) throw new Error('still sealed');
@@ -330,7 +337,7 @@ function tick() {
 
 async function goToPage(page, options = { pop: 'all', animateCards: true }) {
   state.page = page;
-  const missing = state.open && !state.rows.has(page);
+  const missing = state.open && state.isOwner && !state.rows.has(page);
   renderTree(missing ? {} : options); // animate once, when everything is there
   if (!missing) return;
   try {
@@ -409,7 +416,7 @@ function renderTree({ pop = null, animateCards = false } = {}) {
 
   renderTabs();
   setText($('count'), state.count === 0 ? 'count_zero' : state.count === 1 ? 'count_one' : 'count_many', { n: state.count });
-  setText($('explain'), state.open ? 'explain_open' : 'explain_sealed');
+  setText($('explain'), !state.open ? 'explain_sealed' : state.isOwner ? 'explain_open' : 'explain_open_guest', { name: state.tree.owner_name });
   $('countdown').hidden = state.open;
   if (state.open) $('opens').hidden = true;
   else setText($('opens'), 'opens_on', { date: state.tree.reveal_at });
@@ -522,7 +529,7 @@ function setupWishForm() {
     state.ornaments[index] = wish.ornament;
     state.count += 1;
     const page = Math.floor(index / PER_TREE), slot = index % PER_TREE;
-    if (state.open) {
+    if (state.open && state.isOwner) {
       const rows = state.rows.get(page);
       if (rows) { if (rows.length < PER_TREE) rows.push(wish); } else if (slot === 0) state.rows.set(page, [wish]);
     }
@@ -530,7 +537,7 @@ function setupWishForm() {
 
     form.hidden = true;
     $('done-use').setAttribute('href', `#o-${wish.ornament}`);
-    setText($('done-body'), state.open ? 'done_open' : 'done_sealed', { date: state.tree.reveal_at });
+    setText($('done-body'), !state.open ? 'done_sealed' : state.isOwner ? 'done_open' : 'done_open_guest', { date: state.tree.reveal_at });
     $('wish-done').hidden = false;
     $('done-title').focus();
   });
@@ -538,7 +545,7 @@ function setupWishForm() {
 
 async function treeView() {
   const slug = (params.get('t') || CFG.FEATURED_SLUG || '').toLowerCase();
-  const { data, error } = await db.from('trees').select('id,slug,owner_name,reveal_at').eq('slug', slug).maybeSingle();
+  const { data, error } = await db.from('trees').select('id,slug,owner_id,owner_name,reveal_at').eq('slug', slug).maybeSingle();
   if (error) throw error;
   if (!data) {
     if (params.get('t')) showMessage('missing_title', 'missing_body');
@@ -546,6 +553,9 @@ async function treeView() {
     return;
   }
   state.tree = data;
+  // UI hint only; the database decides who may read wishes.
+  const { data: { session } } = await db.auth.getSession();
+  state.isOwner = !!session && session.user.id === data.owner_id;
   await loadSealed();
 
   document.title = t('title', { name: data.owner_name });

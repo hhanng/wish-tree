@@ -3,8 +3,8 @@
 A Christmas tree of sealed wishes. You sign in once and get your own tree at your own
 link. Friends open it and hang a wish, with their name or anonymously, without making an
 account. They pick an ornament and watch it appear on the tree. Nobody can read the wishes
-until the opening day you chose (Christmas Day by default), when the tree opens and shows
-them all.
+until the opening day you chose (Christmas Day by default). Then the tree opens for you,
+and only you: friends see the ornaments, never the messages.
 
 **Live:** https://wish-tree-pi.vercel.app/
 
@@ -14,11 +14,13 @@ The page does not hide wishes. The database refuses to return them. This is the 
 Security policy that does it:
 
 ```sql
-create policy "wishes readable only after reveal" on public.wishes
-  for select to anon, authenticated
+create policy "owner reads own wishes after reveal" on public.wishes
+  for select to authenticated
   using (exists (
     select 1 from public.trees t
-    where t.id = wishes.tree_id and now() >= t.reveal_at
+    where t.id = wishes.tree_id
+      and t.owner_id = auth.uid()
+      and now() >= t.reveal_at
   ));
 ```
 
@@ -30,7 +32,8 @@ uses the database clock, so changing the clock on a phone does nothing. Try it:
 curl "https://tcrtkzqqcpzksjzbtiew.supabase.co/rest/v1/wishes?select=*" -H "apikey: sb_publishable_3r4X8t2uCC0Aw6tFJsEoig_2LsCQ6QR"
 ```
 
-Rows come back only for trees whose opening time has passed.
+That call always returns zero rows: the public key is never an owner. After the opening
+time, a signed-in owner gets the rows of their own tree and nothing else.
 
 The key above is meant to be public. It only identifies the project; the policies decide
 what it may do.

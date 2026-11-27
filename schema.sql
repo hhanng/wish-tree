@@ -53,12 +53,15 @@ create policy "anyone can add a wish" on public.wishes
   for insert to anon, authenticated
   with check (exists (select 1 from public.trees t where t.id = wishes.tree_id));
 
--- The seal: no row is readable before its tree's opening time.
-create policy "wishes readable only after reveal" on public.wishes
-  for select to anon, authenticated
+-- The seal: no row is readable before its tree's opening time, and afterwards only
+-- the tree's owner can read it.
+create policy "owner reads own wishes after reveal" on public.wishes
+  for select to authenticated
   using (exists (
     select 1 from public.trees t
-    where t.id = wishes.tree_id and now() >= t.reveal_at
+    where t.id = wishes.tree_id
+      and t.owner_id = auth.uid()
+      and now() >= t.reveal_at
   ));
 
 -- Public facts about sealed wishes ------------------------------------------

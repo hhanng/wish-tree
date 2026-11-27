@@ -220,3 +220,40 @@ body:has(dialog[open]) { overflow: hidden; }
 .legal { position: relative; z-index: 1; display: flex; justify-content: center; gap: 18px; padding: 0 16px calc(24px + env(safe-area-inset-bottom)); }
 .legal a { color: var(--mist); font-size: 0.78rem; text-decoration: none; }
 .legal a:hover { color: var(--gold); text-decoration: underline; }
+
+/* Wide screens: stand the tree beside its details so the countdown and the
+   buttons are on screen without scrolling. One column everywhere else. */
+@media (min-width: 1000px) and (min-height: 560px) {
+  main { width: min(100%, 1080px); padding-bottom: 24px; }
+
+  #view-tree {
+    display: grid;
+    grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+    /* Blank 1fr rows above and below the details centre them against the tree. */
+    grid-template-rows: auto 1fr auto auto auto auto auto 1fr auto auto;
+    column-gap: clamp(28px, 4vw, 64px);
+    row-gap: 0;
+    min-height: calc(100vh - 140px);
+  }
+
+  #tabs { grid-area: 1 / 1 / 2 / 3; }
+
+  /* The tree's viewBox is 740x990, so width = height x 0.747 keeps it whole. */
+  .tree-wrap {
+    grid-area: 2 / 1 / 9 / 2;
+    align-self: center;
+    margin: 0;
+    width: min(500px, calc((100vh - 250px) * 0.747));
+  }
+
+  .tree-head { grid-area: 3 / 2 / 4 / 3; text-align: left; padding-top: 0; }
+  .tree-head h1 { margin-top: 0; }
+  .explain { margin-inline: 0; }
+  .count { grid-area: 4 / 2 / 5 / 3; text-align: left; }
+  .countdown { grid-area: 5 / 2 / 6 / 3; margin: 0; max-width: 420px; }
+  .opens { grid-area: 6 / 2 / 7 / 3; text-align: left; margin-top: 10px; }
+  .actions { grid-area: 7 / 2 / 8 / 3; justify-content: flex-start; }
+
+  #cards-status { grid-area: 9 / 1 / 10 / 3; }
+  #cards { grid-area: 10 / 1 / 11 / 3; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

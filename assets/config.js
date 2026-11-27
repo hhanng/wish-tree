@@ -4,7 +4,7 @@
 window.WISH_TREE_CONFIG = {
   SUPABASE_URL: 'https://tcrtkzqqcpzksjzbtiew.supabase.co',
   SUPABASE_KEY: 'sb_publishable_3r4X8t2uCC0Aw6tFJsEoig_2LsCQ6QR',
-  FEATURED_SLUG: 'han-han', // shown when the URL has no ?t=
+  FEATURED_SLUG: 'hhan', // shown when the URL has no ?t=
   ENABLE_GOOGLE: true, // needs OAuth credentials + the provider enabled in Supabase
   ENABLE_PHONE: false, // needs an SMS provider configured in Supabase
 };

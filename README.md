@@ -88,6 +88,7 @@ and add `https://hhanng.github.io/wish-tree/**` to the redirect URLs.
 | `assets/app.js` | strings in Vietnamese and English, the painted tree, all screens |
 | `assets/style.css` | styling |
 | `schema.sql` | reference copy of the database |
+| `docs/USER_STORIES.md` | who uses the app and what each of them must be able to do |
 | `tests/e2e.py` | browser test against a fake backend: `python3 tests/e2e.py` (needs Playwright for Python) |
 | `reference/` | notes on the style references |
 

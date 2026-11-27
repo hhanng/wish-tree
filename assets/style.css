@@ -37,7 +37,7 @@ body {
   align-items: center;
   padding: 12px max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
 }
-.brand { font: 600 1.25rem var(--serif); color: var(--gold); text-decoration: none; }
+.brand { display: inline-flex; align-items: center; min-height: 44px; font: 600 1.25rem var(--serif); color: var(--gold); text-decoration: none; }
 
 main { width: min(100%, 640px); margin: 0 auto; padding: 8px 16px calc(64px + env(safe-area-inset-bottom)); }
 
@@ -108,7 +108,7 @@ form > .btn { margin-top: 10px; }
   border-radius: 24px;
 }
 .panel > .btn { width: 100%; margin-top: 12px; }
-.back { display: inline-block; margin-top: 18px; padding: 8px 0; }
+.back { display: inline-flex; align-items: center; min-height: 44px; margin-top: 12px; }
 
 /* ---------- tree view ---------- */
 
@@ -120,8 +120,8 @@ form > .btn { margin-top: 10px; }
 .tabs { display: flex; gap: 8px; overflow-x: auto; padding: 18px 4px 4px; justify-content: safe center; }
 .tab {
   flex: none;
-  min-height: 40px;
-  padding: 6px 16px;
+  min-height: 44px;
+  padding: 6px 18px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: var(--glass);
@@ -129,6 +129,8 @@ form > .btn { margin-top: 10px; }
   font: 500 0.88rem var(--sans);
   cursor: pointer;
 }
+.tab:hover { background: rgba(255, 255, 255, 0.12); }
+.tab:active, .pick:active { transform: scale(0.96); }
 .tab[aria-pressed='true'] { background: var(--gold); border-color: var(--gold); color: #2a1a04; font-weight: 600; }
 
 .tree-wrap { position: relative; width: min(100%, 520px); margin: 6px auto 0; }
@@ -186,8 +188,9 @@ body:has(dialog[open]) { overflow: hidden; }
 .sheet { position: relative; padding: 26px 22px calc(22px + env(safe-area-inset-bottom)); }
 .close { position: absolute; top: 12px; right: 12px; width: 44px; height: 44px; border: 0; border-radius: 50%; background: var(--glass); color: var(--snow); font-size: 1.6rem; line-height: 1; cursor: pointer; }
 .sheet h2 { padding-right: 44px; }
-.picker { display: grid; grid-template-columns: repeat(6, 1fr); gap: 7px; }
-.pick { aspect-ratio: 1; padding: 5px; border: 3px solid transparent; border-radius: 14px; background: var(--tile); cursor: pointer; opacity: 0.82; }
+.picker { display: grid; grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); gap: 7px; }
+.pick { aspect-ratio: 1; padding: 5px; border: 3px solid transparent; border-radius: 14px; background: var(--tile); cursor: pointer; opacity: 0.82; transition: opacity 0.2s, transform 0.15s; }
+.pick:hover { opacity: 1; }
 .pick svg { display: block; width: 100%; height: 100%; }
 .pick[aria-checked='true'] { opacity: 1; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(236, 189, 98, 0.4); }
 #wish-done { padding: 12px 0; }

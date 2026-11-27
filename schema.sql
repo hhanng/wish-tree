@@ -9,6 +9,7 @@ create table public.trees (
   owner_name text not null,
   reveal_at  timestamptz not null,
   created_at timestamptz not null default now(),
+  in_forest  boolean not null default true, -- listed in the public forest
   constraint trees_slug_fmt check (slug ~ '^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$'),
   constraint trees_owner_len check (char_length(btrim(owner_name)) between 1 and 60)
 );
@@ -107,6 +108,7 @@ set search_path to 'public'
 as $$
   select t.slug, t.owner_name, count(w.id)::int, t.created_at
   from public.trees t left join public.wishes w on w.tree_id = t.id
+  where t.in_forest
   group by t.id
   order by t.created_at asc
   limit 2000
@@ -146,3 +148,16 @@ create policy "owner reads wish media after reveal" on storage.objects
         and now() >= t.reveal_at
     )
   );
+
+-- Every tree counts toward the forest's total, listed or not.
+create or replace function public.tree_total()
+returns integer
+language sql stable security definer
+set search_path to 'public'
+as $$ select count(*)::int from public.trees $$;
+
+revoke all on function public.tree_total() from public;
+grant execute on function public.tree_total() to anon, authenticated, service_role;
+
+-- New trees grow into an open forest page live.
+alter publication supabase_realtime add table public.trees;

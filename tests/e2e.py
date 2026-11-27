@@ -36,10 +36,43 @@ class Fake:
         self.inserts = []
         self.wish_reads = []
         self.uploads = []
+        self.hidden_trees = 0
+        self.tree_updates = []
+        self.sockets = []
         self.fail_upload = False
         self.forest = [{"slug": "demo", "owner_name": "Hàn Hân", "wishes": wishes, "planted_at": "2026-11-26T00:00:00Z"}] + [
             {"slug": f"tree-{i}", "owner_name": XSS if i == 3 else f"Person {i}", "wishes": i % 9,
              "planted_at": "2026-11-27T00:00:00Z"} for i in range(40)]
+
+    def realtime(self, ws):
+        """Just enough of Supabase Realtime (Phoenix channels) to join and receive pushes."""
+        self.sockets.append(ws)
+        ws.joins = {}
+
+        def send(join_ref, ref, topic, event, payload):
+            ws.send(json.dumps([join_ref, ref, topic, event, payload]))
+
+        def on_message(msg):
+            m = json.loads(msg)
+            join_ref, ref, topic, event, payload = m if isinstance(m, list) else (
+                m.get("join_ref"), m.get("ref"), m["topic"], m["event"], m["payload"])
+            reply = {"status": "ok", "response": {}}
+            if event == "phx_join":
+                changes = payload.get("config", {}).get("postgres_changes", [])
+                ws.joins[topic] = (join_ref, [{**c, "id": 100 + i} for i, c in enumerate(changes)])
+                reply["response"] = {"postgres_changes": ws.joins[topic][1]}
+            send(join_ref, ref, topic, "phx_reply", reply)
+
+        ws.on_message(on_message)
+
+    def push_tree(self, record):
+        for ws in self.sockets:
+            for topic, (join_ref, changes) in ws.joins.items():
+                ws.send(json.dumps([join_ref, None, topic, "postgres_changes", {
+                    "ids": [c["id"] for c in changes],
+                    "data": {"type": "INSERT", "schema": "public", "table": "trees", "record": record,
+                             "commit_timestamp": "2026-11-27T21:00:00Z", "errors": None,
+                             "columns": [{"name": k, "type": "text"} for k in record]}}]))
 
     def row(self):
         return {**self.tree, "reveal_at": self.reveal.isoformat()}
@@ -66,6 +99,11 @@ class Fake:
             return reply([{"ornament": w["ornament"]} for w in mine])
         if path == "/rest/v1/rpc/forest":
             return reply(self.forest)
+        if path == "/rest/v1/rpc/tree_total":
+            return reply(len(self.forest) + self.hidden_trees)
+        if path == "/rest/v1/trees" and req.method == "PATCH":
+            self.tree_updates.append(req.post_data_json)
+            return reply(None, 204)
         if path == "/rest/v1/trees" and req.method == "GET":
             ok = self.has_tree and (q.get("slug") == "eq.demo" or q.get("owner_id") == "eq.u1")
             return reply([self.row()] if ok else [])
@@ -130,6 +168,7 @@ def open_page(browser, fake, query="?t=demo", width=390, height=844, signed_in=F
     if umd:  # offline copy when the CDN is unreachable
         context.route("https://cdn.jsdelivr.net/**", lambda r: r.fulfill(content_type="text/javascript", body=open(umd, "rb").read()))
     context.route(API + "/**", fake.handle)
+    context.route_web_socket(re.compile(r"wss://.*/realtime/.*"), fake.realtime)
     if signed_in:
         token = {"access_token": "x.y.z", "refresh_token": "r", "token_type": "bearer", "expires_in": 3600,
                  "expires_at": int(time.time()) + 86400 * 120, "user": {"id": "u1", "aud": "authenticated"}}
@@ -299,7 +338,37 @@ with sync_playwright() as p:
     expect(page.locator("#forest-tip")).to_be_visible()
     assert "from=forest" in page.locator("#forest-trees .pine").first.get_attribute("href")
     shot(page, "forest-mobile", full_page=True)
-    done(page, "forest view")
+    page.wait_for_timeout(1500)  # let the channel join
+    fake.push_tree({"id": "t9", "slug": "brand-new", "owner_name": "Newcomer", "in_forest": True})
+    expect(page.locator("#forest-trees .pine")).to_have_count(42)
+    expect(page.locator("#forest-count")).to_have_text("42 trees planted")
+    expect(page.locator("#forest-list li").first).to_contain_text("Newcomer")
+    fake.push_tree({"id": "t10", "slug": "shy-one", "owner_name": "Shy", "in_forest": False})
+    expect(page.locator("#forest-count")).to_have_text("43 trees planted")
+    expect(page.locator("#forest-trees .pine")).to_have_count(42)
+    done(page, "forest view, new trees grow in live")
+
+    # Signed in: your own tree glows; hidden trees still count
+    fake = Fake(wishes=4)
+    fake.hidden_trees = 3
+    page = open_page(browser, fake, query="?view=forest", signed_in=True)
+    expect(page.locator("#forest-count")).to_have_text("44 trees planted")
+    expect(page.locator("#forest-trees .pine.mine")).to_have_count(1)
+    assert page.locator("#forest-trees .pine.mine").get_attribute("data-slug") == "demo"
+    expect(page.locator("#forest-list a.mine")).to_have_count(1)
+    shot(page, "forest-mine-desktop")
+    done(page, "your own tree glows in the forest")
+
+    # Owner hides the tree from the forest
+    fake = Fake(wishes=4)
+    page = open_page(browser, fake, query="?view=me", signed_in=True)
+    expect(page.locator("#in-forest")).to_be_checked()
+    page.click("#in-forest")
+    expect(page.locator("#in-forest")).not_to_be_checked()
+    page.wait_for_timeout(500)
+    assert fake.tree_updates == [{"in_forest": False}], fake.tree_updates
+    shot(page, "me-switch")
+    done(page, "owner hides the tree from the forest")
 
     # A stranger from the forest: anonymous only, lands on the strangers' tree
     fake = Fake(wishes=4)

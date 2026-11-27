@@ -15,7 +15,7 @@ Each story ends with acceptance criteria. "Sealed" means before the tree's `reve
 ### O1. Sign in without a password
 As an owner, I want to sign in with a link sent to my email, so I don't need another password.
 
-- Entering an email sends a magic link; the page then says "Check your email" and names the address.
+- Entering an email sends a magic link; the page then says "Check your inbox" and names the address.
 - An invalid email shows "Enter a valid email address." and sends nothing.
 - An expired or used link brings me back to sign in with a message saying so.
 - Google and phone code buttons appear only when `ENABLE_GOOGLE` / `ENABLE_PHONE` are on.

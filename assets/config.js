@@ -8,4 +8,5 @@ window.WISH_TREE_CONFIG = {
   ENABLE_EMAIL: false, // magic links are rate limited on Supabase's shared mailer; set true once a custom SMTP is configured
   ENABLE_GOOGLE: true, // needs OAuth credentials + the provider enabled in Supabase
   ENABLE_PHONE: false, // needs an SMS provider configured in Supabase
+  ENABLE_FOREST: false, // hides every link to the forest (and the strangers' tree switch); ?view=forest still opens it for previewing
 };

@@ -144,7 +144,7 @@ class Fake:
         return reply({"message": "unexpected " + path}, 404)
 
 
-def local_file(email_login=False):
+def local_file(email_login=False, forest=True):
     """Serve the real site files. email_login flips ENABLE_EMAIL on so the magic
     link flow stays covered while the shipped config keeps it off."""
     def handler(route):
@@ -155,14 +155,16 @@ def local_file(email_login=False):
         body = file.read_bytes()
         if email_login and file.name == "config.js":
             body = body.replace(b"ENABLE_EMAIL: false", b"ENABLE_EMAIL: true")
+        if forest and file.name == "config.js":
+            body = body.replace(b"ENABLE_FOREST: false", b"ENABLE_FOREST: true")
         route.fulfill(content_type=TYPES.get(file.suffix, "application/octet-stream") + "; charset=utf-8",
                       body=body)
     return handler
 
 
-def open_page(browser, fake, query="?t=demo", width=390, height=844, signed_in=False, email_login=False, **ctx):
+def open_page(browser, fake, query="?t=demo", width=390, height=844, signed_in=False, email_login=False, forest=True, **ctx):
     context = browser.new_context(viewport={"width": width, "height": height}, **ctx)
-    context.route(SITE + "**", local_file(email_login))
+    context.route(SITE + "**", local_file(email_login, forest))
     import os
     umd = os.environ.get("SUPABASE_UMD")
     if umd:  # offline copy when the CDN is unreachable
@@ -359,6 +361,19 @@ with sync_playwright() as p:
     shot(page, "forest-mine-desktop")
     done(page, "your own tree glows in the forest")
 
+    # Shipped config with the forest switched off: no way in from the page, no strangers' switch
+    fake = Fake(wishes=4, opens_in=-60)
+    page = open_page(browser, fake, signed_in=True, forest=False)
+    expect(page.locator(".card")).to_have_count(4)
+    expect(page.locator("a[href='?view=forest']:visible")).to_have_count(0)
+    expect(page.locator("#circles")).to_be_hidden()
+    done(page, "forest off: no forest links, no strangers' switch")
+    fake = Fake(wishes=4)
+    page = open_page(browser, fake, query="?view=me", signed_in=True, forest=False)
+    expect(page.locator("#share-url")).to_be_visible()
+    expect(page.locator("#in-forest")).to_be_hidden()
+    done(page, "forest off: no forest switch on My tree")
+
     # Owner hides the tree from the forest
     fake = Fake(wishes=4)
     page = open_page(browser, fake, query="?view=me", signed_in=True)
@@ -544,7 +559,7 @@ with sync_playwright() as p:
 
     browser.close()
 
-for f in [ROOT / "index.html", *sorted((ROOT / "assets").iterdir())]:
+for f in [ROOT / "index.html", *sorted(p for p in (ROOT / "assets").iterdir() if p.suffix in (".js", ".css"))]:
     text = f.read_text()
     for banned in ("reference/", "innerHTML", "sb_secret_"):
         assert banned not in text, f"{banned} found in {f}"

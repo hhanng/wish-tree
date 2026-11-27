@@ -45,6 +45,9 @@ const STR = {
   media_too_big: 'That file is over 50 MB. Try a shorter video.', media_bad: 'Use a photo or a video (JPG, PNG, WebP, GIF, MP4, MOV, WebM).',
   media_failed: 'The photo or video did not upload. Try again, or remove it and send just the words.', media_label: 'Attached to this wish',
   w_anon_note: 'Wishes from the forest are always anonymous.',
+  in_forest: 'Show my tree in the forest', in_forest_hint: 'Off: your tree still counts, but strangers can’t find it.',
+  forest_toggle_failed: 'That setting was not saved. Try again.',
+  forest_you: 'Your tree',
   forest_link: 'The forest', forest_kicker: 'Everyone\'s trees', forest_title: 'The Wish Forest',
   forest_zero: 'No trees yet. Plant the first one.', forest_one: '1 tree planted', forest_many: '{n} trees planted',
   forest_label: 'A forest with one tree for every person who planted one', forest_tree: '{name}, {count}',
@@ -673,7 +676,7 @@ async function treeView() {
 // Owners can flip between the friends' tree and the strangers' tree. Visitors only see the one they came by.
 function setupCircles() {
   const box = $('circles');
-  box.hidden = !state.isOwner;
+  box.hidden = !state.isOwner || !CFG.ENABLE_FOREST; // strangers only arrive through the forest
   for (const b of box.children) {
     b.addEventListener('click', async () => {
       if (b.dataset.circle === state.circle) return;
@@ -758,6 +761,15 @@ async function showMyTree(tree) {
   paint($('stat-date'));
   $('share-url').addEventListener('focus', (e) => e.target.select());
   $('share-copy').addEventListener('click', () => copyLink(url, $('share-copy')));
+  const toggle = $('in-forest');
+  toggle.checked = tree.in_forest !== false;
+  toggle.addEventListener('change', async () => {
+    toggle.disabled = true;
+    const { error } = await db.from('trees').update({ in_forest: toggle.checked }).eq('id', tree.id);
+    toggle.disabled = false;
+    if (error) { console.error(error); toggle.checked = !toggle.checked; setText($('me-error'), 'forest_toggle_failed'); }
+    else $('me-error').hidden = true;
+  });
   const counts = await Promise.all(['friends', 'strangers'].map((c) => db.rpc('wish_count', { p_slug: tree.slug, p_circle: c })));
   if (!counts.some((r) => r.error)) $('stat-count').textContent = counts[0].data + counts[1].data;
 }
@@ -884,47 +896,89 @@ function pine(tree, spot, scale) {
   return a;
 }
 
+// One pine on the hills, linked to its tree. Kept in back-to-front order so near trees overlap far ones.
+function plantPine(tree, spot, scale, { grow = false, mine = false } = {}) {
+  const group = $('forest-trees'), tip = $('forest-tip'), wrap = $('forest-wrap');
+  const el = pine(tree, spot, scale * (0.55 + spot.depth * 0.6));
+  el.dataset.y = spot.y;
+  el.dataset.slug = tree.slug;
+  if (mine) el.classList.add('mine');
+  if (grow && !reducedMotion.matches) el.classList.add('grow');
+  const showTip = () => {
+    tip.replaceChildren(Object.assign(document.createElement('b'), { textContent: tree.owner_name }), document.createTextNode(countText(tree.wishes)));
+    const box = el.getBoundingClientRect(), outer = wrap.getBoundingClientRect();
+    tip.style.left = `${box.left + box.width / 2 - outer.left}px`;
+    tip.style.top = `${box.top - outer.top}px`;
+    tip.hidden = false;
+  };
+  el.addEventListener('mouseenter', showTip);
+  el.addEventListener('focus', showTip);
+  el.addEventListener('mouseleave', () => { tip.hidden = true; });
+  el.addEventListener('blur', () => { tip.hidden = true; });
+  const before = [...group.children].find((c) => Number(c.dataset.y) > spot.y);
+  group.insertBefore(el, before || null);
+  if (mine) {
+    const box = el.getBBox();
+    const label = document.createElementNS(SVG_NS, 'text');
+    label.setAttribute('x', (box.x + box.width / 2).toFixed(1));
+    label.setAttribute('y', (box.y - 12).toFixed(1));
+    label.setAttribute('class', 'mine-label');
+    label.textContent = t('forest_you');
+    el.append(label);
+  }
+}
+
+function listTree(tree, { first = false, mine = false } = {}) {
+  const list = $('forest-list');
+  const li = document.createElement('li'), a = document.createElement('a');
+  a.href = `?t=${encodeURIComponent(tree.slug)}&from=forest`;
+  if (mine) a.classList.add('mine');
+  a.append(Object.assign(document.createElement('span'), { textContent: tree.owner_name }), Object.assign(document.createElement('small'), { textContent: countText(tree.wishes) }));
+  li.append(a);
+  if (first) list.prepend(li); else list.append(li);
+  $('forest-list-wrap').hidden = false;
+}
+
+function showTotal(total) {
+  setText($('forest-count'), total === 0 ? 'forest_zero' : total === 1 ? 'forest_one' : 'forest_many', { n: total.toLocaleString('en') });
+}
+
 async function forestView() {
   document.title = t('forest_title');
   show('view-forest');
   const status = $('forest-status');
   setText(status, 'loading');
-  const { data, error } = await db.rpc('forest');
-  if (error) { console.error(error); setText(status, 'forest_error'); return; }
-  const trees = data || [];
+  const { data: { session } } = await db.auth.getSession();
+  const [listed, total, own] = await Promise.all([
+    db.rpc('forest'),
+    db.rpc('tree_total'),
+    session ? db.from('trees').select('slug').eq('owner_id', session.user.id).maybeSingle() : { data: null },
+  ]);
+  if (listed.error) { console.error(listed.error); setText(status, 'forest_error'); return; }
+  const trees = listed.data || [];
+  const mySlug = own.data?.slug;
+  let count = total.error ? trees.length : total.data;
   status.hidden = true;
-  setText($('forest-count'), trees.length === 0 ? 'forest_zero' : trees.length === 1 ? 'forest_one' : 'forest_many', { n: trees.length.toLocaleString('en') });
+  showTotal(count);
 
-  const group = $('forest-trees'), tip = $('forest-tip'), wrap = $('forest-wrap');
   const spots = forestSpots(trees.length);
   const scale = Math.max(0.5, Math.min(1.8, 4.5 / Math.sqrt(Math.max(trees.length, 1))));
-  trees.map((tree, i) => ({ tree, spot: spots[i] }))
-    .sort((a, b) => a.spot.y - b.spot.y) // far trees first so near ones overlap them
-    .forEach(({ tree, spot }) => {
-      const el = pine(tree, spot, scale * (0.55 + spot.depth * 0.6));
-      const showTip = () => {
-        tip.replaceChildren(Object.assign(document.createElement('b'), { textContent: tree.owner_name }), document.createTextNode(countText(tree.wishes)));
-        const box = el.getBoundingClientRect(), outer = wrap.getBoundingClientRect();
-        tip.style.left = `${box.left + box.width / 2 - outer.left}px`;
-        tip.style.top = `${box.top - outer.top}px`;
-        tip.hidden = false;
-      };
-      el.addEventListener('mouseenter', showTip);
-      el.addEventListener('focus', showTip);
-      el.addEventListener('mouseleave', () => { tip.hidden = true; });
-      el.addEventListener('blur', () => { tip.hidden = true; });
-      group.append(el);
-    });
+  trees.forEach((tree, i) => plantPine(tree, spots[i], scale, { mine: tree.slug === mySlug }));
+  [...trees].reverse().forEach((tree) => listTree(tree, { mine: tree.slug === mySlug }));
 
-  const list = $('forest-list');
-  [...trees].reverse().forEach((tree) => {
-    const li = document.createElement('li'), a = document.createElement('a');
-    a.href = `?t=${encodeURIComponent(tree.slug)}&from=forest`;
-    a.append(Object.assign(document.createElement('span'), { textContent: tree.owner_name }), Object.assign(document.createElement('small'), { textContent: countText(tree.wishes) }));
-    li.append(a);
-    list.append(li);
-  });
-  $('forest-list-wrap').hidden = trees.length === 0;
+  // A tree planted while someone is looking grows in on the spot.
+  db.channel('forest')
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'trees' }, ({ new: row }) => {
+      if (!row?.slug || trees.some((x) => x.slug === row.slug)) return;
+      count += 1;
+      showTotal(count);
+      if (row.in_forest === false) return;
+      const tree = { slug: row.slug, owner_name: row.owner_name, wishes: 0 };
+      trees.push(tree);
+      plantPine(tree, forestSpots(trees.length)[trees.length - 1], scale, { grow: true });
+      listTree(tree, { first: true });
+    })
+    .subscribe();
 }
 
 /* ---------- snow ---------- */
@@ -981,6 +1035,7 @@ function startSnow() {
 async function main() {
   startSnow();
   $('home-link').href = BASE;
+  if (!CFG.ENABLE_FOREST) document.querySelectorAll('.forest-only').forEach((el) => { el.hidden = true; });
   $('message-retry').addEventListener('click', () => location.reload());
   applyText();
   // Read before createClient(), which consumes the URL fragment. A magic link that falls back

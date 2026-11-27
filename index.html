@@ -143,7 +143,7 @@
 
   <header class="topbar">
     <a class="brand" id="home-link" href="./">Wish Tree</a>
-    <a class="btn btn-quiet" href="?view=forest" data-i18n="forest_link"></a>
+    <a class="btn btn-quiet forest-only" href="?view=forest" data-i18n="forest_link"></a>
   </header>
 
   <main>
@@ -194,7 +194,7 @@
         <button type="button" class="btn btn-primary" id="wish-btn" data-i18n="send_wish"></button>
         <button type="button" class="btn btn-glass" id="copy-btn" data-i18n="copy_link"></button>
         <a class="btn btn-quiet" id="make-link" href="?view=me" data-i18n="make_own"></a>
-        <a class="btn btn-quiet" href="?view=forest" data-i18n="forest_link"></a>
+        <a class="btn btn-quiet forest-only" href="?view=forest" data-i18n="forest_link"></a>
       </div>
 
       <p class="status" id="cards-status" role="status" hidden></p>
@@ -287,11 +287,13 @@
           <div><dt data-i18n="stat_wishes"></dt><dd id="stat-count">–</dd></div>
           <div><dt data-i18n="stat_date"></dt><dd id="stat-date"></dd></div>
         </dl>
+        <div class="forest-only">
         <label class="switch" for="in-forest">
           <input type="checkbox" id="in-forest" role="switch">
           <span data-i18n="in_forest"></span>
         </label>
         <p class="hint" data-i18n="in_forest_hint"></p>
+        </div>
       </div>
 
       <p class="error" id="me-error" role="alert" hidden></p>

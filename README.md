@@ -6,7 +6,7 @@ account. They pick an ornament and watch it appear on the tree. Nobody can read 
 until the opening day you chose (Christmas Day by default), when the tree opens and shows
 them all.
 
-**Live:** https://hhanng.github.io/wish-tree/
+**Live:** https://vuhanhan.com/wish-tree/
 
 ## How the secret holds
 
@@ -78,7 +78,7 @@ redirect URLs.
 | Phone SMS code | configure a paid SMS provider in Supabase, set `ENABLE_PHONE: true` |
 
 In Supabase → Authentication → URL Configuration, set the site URL to the deployed address
-and add `https://hhanng.github.io/wish-tree/**` to the redirect URLs.
+and add `https://vuhanhan.com/wish-tree/**` to the redirect URLs.
 
 ## Files
 

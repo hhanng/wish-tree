@@ -223,7 +223,6 @@
       <h1 id="me-title" data-i18n="me_title"></h1>
 
       <form id="create-form" novalidate hidden>
-        <p data-i18n="create_intro"></p>
         <label for="f-name" data-i18n="f_name"></label>
         <input id="f-name" maxlength="60" autocomplete="name" required>
         <label for="f-slug" data-i18n="f_slug"></label>
@@ -236,7 +235,6 @@
       </form>
 
       <div id="my-tree" hidden>
-        <p data-i18n="share_intro"></p>
         <label for="share-url" data-i18n="your_link"></label>
         <input id="share-url" readonly>
         <div class="actions">
@@ -277,6 +275,11 @@
       </div>
     </div>
   </dialog>
+
+  <footer class="legal">
+    <a href="privacy.html">Privacy</a>
+    <a href="terms.html">Terms</a>
+  </footer>
 
   <noscript><p class="status">Wish Tree needs JavaScript. / Wish Tree cần JavaScript.</p></noscript>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

@@ -148,7 +148,7 @@ with sync_playwright() as p:
     page = open_page(browser, fake, width=1100, height=1300)
     expect(page.locator("#owner-name")).to_have_text("Hàn Hân")
     expect(page).to_have_title("Hàn Hân — Wish Tree")
-    expect(page.locator("#count")).to_have_text("7 wishes hanging on the tree")
+    expect(page.locator("#count")).to_have_text("7 wishes")
     expect(page.locator("#countdown")).to_be_visible()
     expect(page.locator("#ornaments .slot")).to_have_count(7)
     assert page.eval_on_selector_all("#ornaments .slot", "e => e.map(x => x.dataset.ornament)") == ORNS[:7]
@@ -198,7 +198,7 @@ with sync_playwright() as p:
 
     send(page, "  nine  ")
     expect(page.locator("#wish-done")).to_be_visible()
-    expect(page.locator("#done-body")).to_contain_text("sealed")
+    expect(page.locator("#done-body")).to_contain_text("Sealed")
     assert fake.inserts[-1] == {"tree_id": "t1", "display_name": None, "message": "nine", "ornament": "bow"}
     shot(page, "done-mobile")
     page.click("#done-close")
@@ -211,7 +211,7 @@ with sync_playwright() as p:
     expect(page.locator(".tab").nth(1)).to_have_attribute("aria-pressed", "true")
     expect(page.locator("#ornaments .slot")).to_have_count(1)
     expect(page.locator("#ornaments .slot")).to_have_attribute("data-ornament", "gift")
-    expect(page.locator("#count")).to_have_text("11 wishes hanging on the tree")
+    expect(page.locator("#count")).to_have_text("11 wishes")
     page.click("#done-close")
     page.locator(".tab").first.click()
     expect(page.locator("#ornaments .slot")).to_have_count(10)
@@ -243,7 +243,7 @@ with sync_playwright() as p:
     expect(page.locator(".card .message").first).to_contain_text("Wish number 21.")
     send(page, "late one", ornament="bell")
     expect(page.locator(".card")).to_have_count(4)
-    expect(page.locator("#done-body")).to_contain_text("already open")
+    expect(page.locator("#done-body")).to_contain_text("is open")
     done(page, "revealed view, XSS literal, per-tree cards, clickable ornaments")
 
     # Countdown reaching zero while open
@@ -274,7 +274,7 @@ with sync_playwright() as p:
     page.click("#lang-btn")
     expect(page.locator("#wish-btn")).to_have_text("Gửi điều ước")
     expect(page.locator(".kicker")).to_have_text("Cây của")
-    expect(page.locator("#count")).to_have_text("12 điều ước đang treo trên cây")
+    expect(page.locator("#count")).to_have_text("12 điều ước")
     expect(page.locator(".tab").first).to_have_text("Cây 1")
     expect(page.locator("#opens")).to_contain_text("tháng")
     expect(page).to_have_title("Hàn Hân — Cây điều ước")

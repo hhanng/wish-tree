@@ -19,6 +19,7 @@ API = "https://tcrtkzqqcpzksjzbtiew.supabase.co"
 SHOTS = Path(sys.argv[1]) if len(sys.argv) > 1 else None
 TYPES = {".html": "text/html", ".js": "text/javascript", ".css": "text/css"}
 XSS = "<img src=x onerror=alert(1)>"
+PNG = bytes.fromhex("89504e470d0a1a0a0000000d4948445200000002000000020802000000fdd49a73000000164944415478da63f8cfc0f01f0c18c0c0f01f0c00e3e80bf7d1be82650000000049454e44ae426082")
 ORNS = ["bow", "bauble-red", "bauble-green", "star", "bell", "wreath",
         "candle", "holly", "candycane", "snowflake", "stocking", "gift"]
 
@@ -34,6 +35,8 @@ class Fake:
         self.fail_insert = False
         self.inserts = []
         self.wish_reads = []
+        self.uploads = []
+        self.fail_upload = False
         self.forest = [{"slug": "demo", "owner_name": "Hàn Hân", "wishes": wishes, "planted_at": "2026-11-26T00:00:00Z"}] + [
             {"slug": f"tree-{i}", "owner_name": XSS if i == 3 else f"Person {i}", "wishes": i % 9,
              "planted_at": "2026-11-27T00:00:00Z"} for i in range(40)]
@@ -88,6 +91,16 @@ class Fake:
             self.inserts.append(body)
             self.wishes.append({"id": f"w{len(self.wishes):03}", **body})
             return reply(None, 201)
+        if path == "/storage/v1/object/sign/wish-media" and req.method == "POST":
+            paths = req.post_data_json["paths"]
+            return reply([{"path": p, "signedURL": f"/object/sign/wish-media/{p}?token=t", "error": None} for p in paths])
+        if path.startswith("/storage/v1/object/wish-media/") and req.method == "POST":
+            if self.fail_upload:
+                return reply({"statusCode": "500", "error": "boom", "message": "boom"}, 500)
+            self.uploads.append(path.removeprefix("/storage/v1/object/wish-media/"))
+            return reply({"Key": path})
+        if path.startswith("/storage/v1/object/sign/") and req.method == "GET":
+            return route.fulfill(status=200, content_type="image/png", body=PNG)
         if path == "/auth/v1/otp":
             return reply({})
         return reply({"message": "unexpected " + path}, 404)
@@ -317,6 +330,44 @@ with sync_playwright() as p:
     expect(page.locator(".card")).to_have_count(5)
     shot(page, "owner-circles", full_page=True)
     done(page, "owner switches between friends and strangers")
+
+    # A photo on a wish: uploaded under the tree's folder, shown only on the owner's open tree
+    import tempfile
+    pic = Path(tempfile.mkdtemp()) / "snow.png"
+    pic.write_bytes(PNG)
+    fake = Fake(wishes=2)
+    page = open_page(browser, fake)
+    page.click("#wish-btn")
+    page.fill("#w-message", "look at this")
+    fake.fail_upload = True
+    page.set_input_files("#w-file", str(pic))
+    expect(page.locator("#media-preview img")).to_have_count(1)
+    page.click("#wish-submit")
+    expect(page.locator("#wish-error")).to_contain_text("did not upload")
+    assert len(fake.inserts) == 0
+    page.errors.clear()  # the 500 above was on purpose
+    fake.fail_upload = False
+    page.click("#wish-submit")
+    expect(page.locator("#wish-done")).to_be_visible()
+    assert len(fake.uploads) == 1 and re.fullmatch(r"t1/[0-9a-f-]{36}\.(png|jpg)", fake.uploads[0]), fake.uploads
+    ins = fake.inserts[-1]
+    assert ins["media_path"] == fake.uploads[0] and ins["media_type"] == "image", ins
+    page.click("#done-close")
+    page.click("#wish-btn")
+    expect(page.locator("#media-chosen")).to_be_hidden()
+    page.click("#wish-close")
+    done(page, "attach a photo, upload failure is friendly")
+
+    fake = Fake(wishes=1, opens_in=-60)
+    fake.wishes[0].update(media_path="t1/00000000-0000-0000-0000-000000000000.jpg", media_type="image")
+    fake.wishes.append({"id": "v1", "display_name": "V", "message": "clip", "ornament": "bell",
+                        "media_path": "t1/00000000-0000-0000-0000-000000000001.mp4", "media_type": "video"})
+    page = open_page(browser, fake, signed_in=True)
+    expect(page.locator("#cards img.media")).to_have_count(1)
+    expect(page.locator("#cards video.media")).to_have_count(1)
+    assert page.locator("#cards img.media").get_attribute("src").startswith(API)
+    shot(page, "owner-media", full_page=True)
+    done(page, "owner sees photo and video after opening")
 
     # Device clock ahead of the server: stays sealed, retries
     fake = Fake(wishes=3, opens_in=7)

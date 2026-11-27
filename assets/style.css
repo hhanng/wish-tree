@@ -309,3 +309,11 @@ body:has(dialog[open]) { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) { .pine g { transition: none; } }
 .field-group { display: flex; flex-direction: column; }
 .circles { padding-bottom: 0; }
+
+/* ---------- photo / video on a wish ---------- */
+
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.media-add { margin-bottom: 8px; }
+.media-chosen { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.media-chosen .media { width: 96px; height: 96px; object-fit: cover; margin: 0; }
+.media { display: block; width: 100%; max-height: 70vh; object-fit: contain; border-radius: 14px; background: rgba(3, 7, 26, 0.5); margin: 4px 0 12px; }

@@ -27,7 +27,13 @@ create table public.wishes (
     'bow', 'bauble-red', 'bauble-green', 'star', 'bell', 'wreath',
     'candle', 'holly', 'candycane', 'snowflake', 'stocking', 'gift')),
   constraint wishes_circle_known check (circle in ('friends', 'strangers')),
-  constraint wishes_strangers_anonymous check (circle = 'friends' or display_name is null)
+  constraint wishes_strangers_anonymous check (circle = 'friends' or display_name is null),
+  media_path   text, -- optional photo/video in the wish-media bucket, under <tree_id>/
+  media_type   text,
+  constraint wishes_media_kind check (
+    (media_path is null and media_type is null)
+    or (media_type in ('image', 'video')
+        and media_path ~ ('^' || tree_id::text || '/[0-9a-f-]{36}\.(jpg|jpeg|png|webp|gif|mp4|mov|webm|m4v)$')))
 );
 
 create index wishes_tree_idx on public.wishes (tree_id, circle, created_at);
@@ -112,3 +118,31 @@ revoke all on function public.forest() from public;
 grant execute on function public.wish_count(text, text) to anon, authenticated, service_role;
 grant execute on function public.wish_ornaments(text, text) to anon, authenticated, service_role;
 grant execute on function public.forest() to anon, authenticated, service_role;
+
+-- Photos and videos on wishes -------------------------------------------------
+-- Private bucket, 50 MB per file. Uploads land in an existing tree's folder; the
+-- same seal as the words decides who may read them back.
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('wish-media', 'wish-media', false, 52428800,
+        array['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/quicktime', 'video/webm', 'video/x-m4v']);
+
+create policy "anyone uploads wish media" on storage.objects
+  for insert to anon, authenticated
+  with check (
+    bucket_id = 'wish-media'
+    and name ~ '^[0-9a-f-]{36}/[0-9a-f-]{36}\.(jpg|jpeg|png|webp|gif|mp4|mov|webm|m4v)$'
+    and exists (select 1 from public.trees t where t.id::text = (storage.foldername(name))[1])
+  );
+
+create policy "owner reads wish media after reveal" on storage.objects
+  for select to authenticated
+  using (
+    bucket_id = 'wish-media'
+    and exists (
+      select 1 from public.trees t
+      where t.id::text = (storage.foldername(name))[1]
+        and t.owner_id = auth.uid()
+        and now() >= t.reveal_at
+    )
+  );

@@ -41,6 +41,9 @@ const STR = {
   stat_wishes: 'Wishes', stat_date: 'Opens', me_failed: 'Your tree did not load. Refresh to try again.', sign_out: 'Sign out',
   circle_label: 'Which tree', circle_friends: 'Friends', circle_strangers: 'Strangers',
   kicker_strangers: 'A stranger\'s wish for', explain_strangers: 'You found this tree in the forest. Your wish stays anonymous and sealed.',
+  w_media: 'Photo or video (optional)', w_media_add: 'Add a photo or video', w_media_remove: 'Remove',
+  media_too_big: 'That file is over 50 MB. Try a shorter video.', media_bad: 'Use a photo or a video (JPG, PNG, WebP, GIF, MP4, MOV, WebM).',
+  media_failed: 'The photo or video did not upload. Try again, or remove it and send just the words.', media_label: 'Attached to this wish',
   w_anon_note: 'Wishes from the forest are always anonymous.',
   forest_link: 'The forest', forest_kicker: 'Everyone\'s trees', forest_title: 'The Wish Forest',
   forest_zero: 'No trees yet. Plant the first one.', forest_one: '1 tree planted', forest_many: '{n} trees planted',
@@ -275,6 +278,34 @@ function paintTree(group) {
 const state = { circle: params.get('from') === 'forest' ? 'strangers' : 'friends', tree: null, count: 0, ornaments: [], page: 0, open: false, opening: false, retryAt: 0, rows: new Map() };
 let db;
 
+const MEDIA_MAX = 50 * 1024 * 1024; // Supabase storage limit on this plan
+const MEDIA_EXT = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif',
+  'video/mp4': 'mp4', 'video/quicktime': 'mov', 'video/webm': 'webm', 'video/x-m4v': 'm4v' };
+let attached = null; // { blob, type, kind, preview }
+
+// Phone photos are 3–10 MB; a 1600px JPEG looks the same on a card and uploads in a second.
+async function shrinkImage(file) {
+  if (file.type === 'image/gif') return file;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const k = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+    const canvas = Object.assign(document.createElement('canvas'), { width: Math.round(bitmap.width * k), height: Math.round(bitmap.height * k) });
+    canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise((done) => canvas.toBlob(done, 'image/jpeg', 0.85));
+    return blob && blob.size < file.size ? blob : file;
+  } catch {
+    return file;
+  }
+}
+
+function mediaElement(kind, url) {
+  const el = document.createElement(kind === 'video' ? 'video' : 'img');
+  el.className = 'media';
+  el.src = url;
+  if (kind === 'video') { el.controls = true; el.playsInline = true; el.preload = 'metadata'; } else { el.alt = ''; el.loading = 'lazy'; }
+  return el;
+}
+
 const ornamentId = (id) => (ORNAMENTS.includes(id) ? id : 'bow'); // database text never reaches href unchecked
 
 function ornamentUse(id, size) {
@@ -300,9 +331,20 @@ async function loadSealed() {
 // Only ever called once the opening time has passed; Row Level Security is what actually enforces it.
 async function fetchRows(page) {
   const from = page * PER_TREE;
-  const { data, error } = await db.from('wishes').select('id,display_name,message,ornament')
+  const { data, error } = await db.from('wishes').select('id,display_name,message,ornament,media_path,media_type')
     .eq('tree_id', state.tree.id).eq('circle', state.circle).order('created_at').order('id').range(from, from + PER_TREE - 1);
   if (error) throw error;
+  const paths = data.filter((r) => r.media_path).map((r) => r.media_path);
+  if (paths.length) {
+    // Signed links last an hour; storage only signs them for the owner after opening day.
+    const { data: signed, error: signError } = await db.storage.from('wish-media').createSignedUrls(paths, 3600);
+    if (signError) console.error(signError);
+    const urls = new Map((signed || []).filter((x) => x.signedUrl).map((x) => [x.path, x.signedUrl]));
+    for (const r of data) {
+      const url = urls.get(r.media_path);
+      if (url && url.startsWith(CFG.SUPABASE_URL)) r.media_url = url;
+    }
+  }
   return data;
 }
 
@@ -448,7 +490,9 @@ function renderTree({ pop = null, animateCards = false } = {}) {
     const from = document.createElement('p');
     from.className = 'from';
     setText(from, 'from', row.display_name ? { name: row.display_name } : { nameKey: 'anonymous' });
-    li.append(message, from);
+    li.append(message);
+    if (row.media_url) li.append(mediaElement(row.media_type, row.media_url));
+    li.append(from);
     return li;
   }));
 }
@@ -494,12 +538,39 @@ function setupWishForm() {
   chooseOrnament('bow');
 
   const counter = () => { $('w-count').textContent = `${message.value.length} / 600`; };
+
+  const clearMedia = () => {
+    if (attached?.preview) URL.revokeObjectURL(attached.preview);
+    attached = null;
+    $('w-file').value = '';
+    $('media-preview').replaceChildren();
+    $('media-chosen').hidden = true;
+    $('media-add').hidden = false;
+  };
+  $('media-add').addEventListener('click', () => $('w-file').click());
+  $('media-remove').addEventListener('click', clearMedia);
+  $('w-file').addEventListener('change', async () => {
+    const file = $('w-file').files[0];
+    $('wish-error').hidden = true;
+    if (!file) return;
+    const kind = file.type.startsWith('video/') ? 'video' : file.type.startsWith('image/') ? 'image' : null;
+    if (!kind) { clearMedia(); setText($('wish-error'), 'media_bad'); return; }
+    const blob = kind === 'image' ? await shrinkImage(file) : file;
+    if (!MEDIA_EXT[blob.type]) { clearMedia(); setText($('wish-error'), 'media_bad'); return; }
+    if (blob.size > MEDIA_MAX) { clearMedia(); setText($('wish-error'), 'media_too_big'); return; }
+    if (attached?.preview) URL.revokeObjectURL(attached.preview);
+    attached = { blob, type: blob.type, kind, preview: URL.createObjectURL(blob) };
+    $('media-preview').replaceChildren(mediaElement(kind, attached.preview));
+    $('media-chosen').hidden = false;
+    $('media-add').hidden = true;
+  });
   message.addEventListener('input', counter);
 
   $('wish-btn').addEventListener('click', () => {
     if (!$('wish-done').hidden) { // previous wish was sent: start a fresh one
       form.reset();
       counter();
+      clearMedia();
       chooseOrnament('bow');
       $('wish-done').hidden = true;
       form.hidden = false;
@@ -525,10 +596,18 @@ function setupWishForm() {
       ornament: chosen,
       circle: state.circle,
     };
+    const media = attached;
     if (!wish.message) { setText($('wish-error'), 'wish_empty'); message.focus(); return; }
     $('wish-error').hidden = true;
     const ok = await busy(button, 'sending', async () => {
       try {
+        if (media) {
+          const path = `${state.tree.id}/${crypto.randomUUID()}.${MEDIA_EXT[media.type]}`;
+          const up = await db.storage.from('wish-media').upload(path, media.blob, { contentType: media.type, upsert: false });
+          if (up.error) { console.error(up.error); return 'media_failed'; }
+          wish.media_path = path;
+          wish.media_type = media.kind;
+        }
         // No .select(): the row is unreadable until the tree opens.
         const { error } = await db.from('wishes').insert(wish);
         if (error) console.error(error);
@@ -538,7 +617,8 @@ function setupWishForm() {
         return false;
       }
     });
-    if (!ok) { setText($('wish-error'), 'wish_failed'); return; }
+    if (ok !== true) { setText($('wish-error'), ok || 'wish_failed'); return; }
+    if (media) wish.media_url = media.preview; // the sender's own copy, for the owner's open tree
 
     const index = state.count;
     state.ornaments[index] = wish.ornament;

@@ -307,6 +307,13 @@
         <label for="w-message" data-i18n="w_message"></label>
         <textarea id="w-message" maxlength="600" rows="4" required data-i18n-ph="w_message_ph" aria-describedby="w-count"></textarea>
         <p class="hint counter" id="w-count">0 / 600</p>
+        <p class="legend" data-i18n="w_media"></p>
+        <input id="w-file" type="file" accept="image/*,video/*" class="visually-hidden" tabindex="-1" aria-hidden="true">
+        <button type="button" class="btn btn-glass media-add" id="media-add" data-i18n="w_media_add"></button>
+        <div id="media-chosen" class="media-chosen" hidden>
+          <div id="media-preview"></div>
+          <button type="button" class="btn btn-quiet" id="media-remove" data-i18n="w_media_remove"></button>
+        </div>
         <p class="legend" id="picker-label" data-i18n="w_ornament"></p>
         <div class="picker" id="picker" role="radiogroup" aria-labelledby="picker-label"></div>
         <p class="error" id="wish-error" role="alert" hidden></p>

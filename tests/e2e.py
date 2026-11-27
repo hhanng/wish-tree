@@ -92,17 +92,15 @@ def local_file(route):
                   body=file.read_bytes())
 
 
-def open_page(browser, fake, query="?t=demo", width=390, height=844, lang="en", signed_in=False, **ctx):
+def open_page(browser, fake, query="?t=demo", width=390, height=844, signed_in=False, **ctx):
     context = browser.new_context(viewport={"width": width, "height": height}, **ctx)
     context.route(SITE + "**", local_file)
     context.route(API + "/**", fake.handle)
-    session = ""
     if signed_in:
         token = {"access_token": "x.y.z", "refresh_token": "r", "token_type": "bearer", "expires_in": 3600,
                  "expires_at": int(time.time()) + 3600, "user": {"id": "u1", "aud": "authenticated"}}
-        session = f"localStorage.setItem('sb-tcrtkzqqcpzksjzbtiew-auth-token', {json.dumps(json.dumps(token))});"
-    context.add_init_script(
-        f"if(!localStorage.getItem('wishtree.lang')) localStorage.setItem('wishtree.lang','{lang}');{session}")
+        context.add_init_script(
+            f"localStorage.setItem('sb-tcrtkzqqcpzksjzbtiew-auth-token', {json.dumps(json.dumps(token))});")
     page = context.new_page()
     page.errors = []
     page.dialogs = []
@@ -203,6 +201,7 @@ with sync_playwright() as p:
     shot(page, "done-mobile")
     page.click("#done-close")
     send(page, "ten", name="  Mai ", ornament="star")
+    expect(page.locator("#wish-done")).to_be_visible()  # the insert is recorded only once this shows
     assert fake.inserts[-1]["display_name"] == "Mai" and fake.inserts[-1]["ornament"] == "star"
     page.click("#done-close")
     expect(page.locator("#tabs")).to_be_hidden()
@@ -266,29 +265,20 @@ with sync_playwright() as p:
     expect(page.locator(".card")).to_have_count(3, timeout=25000)
     done(page, "fast device clock waits for the server")
 
-    # Language, 360px, reduced motion
+    # 360px, reduced motion
     fake = Fake(wishes=12)
     page = open_page(browser, fake, width=360, height=740, reduced_motion="reduce")
     expect(page.locator("#snow")).to_be_hidden()
     assert page.evaluate("document.documentElement.scrollWidth") <= 360
-    page.click("#lang-btn")
-    expect(page.locator("#wish-btn")).to_have_text("Gửi điều ước")
-    expect(page.locator(".kicker")).to_have_text("Cây của")
-    expect(page.locator("#count")).to_have_text("12 điều ước")
-    expect(page.locator(".tab").first).to_have_text("Cây 1")
-    expect(page.locator("#opens")).to_contain_text("tháng")
-    expect(page).to_have_title("Hàn Hân — Cây điều ước")
-    page.reload()
-    expect(page.locator("#wish-btn")).to_have_text("Gửi điều ước")
-    assert page.evaluate("Object.keys(STR.en).sort().join()") == page.evaluate("Object.keys(STR.vi).sort().join()")
+    expect(page.locator("#wish-btn")).to_have_text("Send a wish")
     empty = page.evaluate("""() => [...document.querySelectorAll('#view-tree [data-i18n]')]
         .filter(e => !e.hidden && !e.textContent.trim()).map(e => e.dataset.i18n)""")
     assert empty == [], empty
-    shot(page, "vi-360", full_page=True)
+    shot(page, "sealed-360", full_page=True)
     page.click("#wish-btn")
     assert page.evaluate("document.querySelector('dialog').scrollWidth <= 360")
-    shot(page, "vi-360-form")
-    done(page, "Vietnamese, 360px, reduced motion")
+    shot(page, "form-360")
+    done(page, "360px, reduced motion")
 
     # Unknown slug and featured tree missing
     page = open_page(browser, Fake(), query="?t=nope")
@@ -302,7 +292,7 @@ with sync_playwright() as p:
 
     # Sign in
     page = open_page(browser, Fake(), query="?view=me&t=demo")
-    expect(page.locator("#google-btn")).to_be_hidden()
+    expect(page.locator("#google-btn")).to_be_visible()
     expect(page.locator("#phone-block")).to_be_hidden()
     expect(page.locator("#back-link")).to_have_attribute("href", SITE + "?t=demo")
     shot(page, "signin-mobile")

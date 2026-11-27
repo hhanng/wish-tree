@@ -75,9 +75,9 @@ As a visitor, I want to see where my ornament went, even when the first tree is 
 - After sending, the page switches to the tree that holds my wish.
 
 ### V4. Use it my way
-As a visitor, I want the page in my language and usable on my phone.
+As a visitor, I want the page usable on my phone.
 
-- One button switches Vietnamese and English; the choice is remembered.
+- The page is in English.
 - Everything works at 360px wide, by keyboard, and with reduced motion (no snow, no animation).
 
 ---

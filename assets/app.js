@@ -7,76 +7,39 @@ const ORNAMENTS = ['bow', 'bauble-red', 'bauble-green', 'star', 'bell', 'wreath'
 const SLOTS = [[405, 668], [322, 520], [540, 750], [255, 780], [486, 535], [398, 858], [582, 935], [225, 945], [402, 418], [405, 1015]];
 
 const STR = {
-  en: {
-    lang_switch: 'Tiếng Việt', loading: 'Loading…', retry: 'Try again', close: 'Close',
-    kicker: 'The tree of', title: '{name} — Wish Tree',
-    explain_sealed: 'Wishes stay sealed until opening day.',
-    explain_open: 'The tree is open.',
-    explain_opening: 'Opening…',
-    tabs_label: 'Choose a tree', tab: 'Tree {n}', tree_label: 'Christmas tree with wishes hanging on it',
-    count_zero: 'No wishes yet', count_one: '1 wish', count_many: '{n} wishes',
-    countdown_label: 'Time until the tree opens', days: 'days', hours: 'hours', minutes: 'minutes', seconds: 'seconds', opens_on: 'Opens {date}',
-    send_wish: 'Send a wish', copy_link: 'Copy link', copied: 'Link copied', copy_manual: 'Copy this link:', make_own: 'My tree / Create one',
-    cards_label: 'Wishes on this tree', from: 'From {name}', anonymous: 'Anonymous', orn_open: 'Read the wish from {name}',
-    cards_error: 'The wishes did not load. Switch tabs or refresh to try again.',
-    missing_title: 'No tree here yet', missing_body: 'This link does not match any tree. Check the address, or plant your own.',
-    home_empty_title: 'Plant the first tree', home_empty_body: 'Get your own tree, share its link, and let friends hang sealed wishes on it.',
-    error_title: 'The tree did not load', error_body: 'Check your connection and try again.',
-    w_name: 'Your name', w_name_ph: 'Blank = anonymous', w_message: 'Your wish', w_message_ph: 'Write your wish',
-    w_ornament: 'Pick an ornament', hang: 'Hang it on the tree', sending: 'Hanging…',
-    wish_empty: 'Write your wish first.', wish_failed: 'Your wish was not saved. Check your connection and try again.',
-    done_title: 'Your wish is on the tree', done_sealed: 'Sealed until {date}.', done_open: 'The tree is open, so it can be read now.', done_close: 'Back to the tree',
-    signin_title: 'Sign in to see or create your tree',
-    email: 'Email', send_link: 'Send me a link', sending_link: 'Sending…',
-    check_email: 'Check your email', link_sent: 'Open the link we sent to {email}.',
-    google: 'Continue with Google', phone: 'Phone number', send_code: 'Text me a code', code: 'Code from the text', verify_code: 'Sign in',
-    bad_email: 'Enter a valid email address.', bad_phone: 'Enter the number with its country code, like +84901234567.',
-    signin_failed: 'Sign-in did not go through. Try again.', rate_limited: 'Too many sign-in emails. Wait a while and try again.',
-    link_expired: 'That sign-in link has expired or was already used. Ask for a new one.', back: 'Back to the tree',
-    me_title: 'My tree',
-    f_name: 'Your name', f_slug: 'Link name', f_date: 'Opening day', create: 'Plant my tree', creating: 'Planting…',
-    bad_name: 'Enter a name, up to 60 characters.', bad_slug: 'Use 3–40 characters: a–z, 0–9 and hyphens, not starting or ending with a hyphen.',
-    bad_date: 'Choose a day after today.', slug_taken: 'That link name is taken. Try another one.', create_failed: 'The tree was not created. Try again.',
-    your_link: 'Your link', open_tree: 'Open my tree',
-    stat_wishes: 'Wishes', stat_date: 'Opens', me_failed: 'Your tree did not load. Refresh to try again.', sign_out: 'Sign out',
-    o_bow: 'Red bow', 'o_bauble-red': 'Red bauble', 'o_bauble-green': 'Green bauble', o_star: 'Star', o_bell: 'Bell', o_wreath: 'Wreath',
-    o_candle: 'Candle', o_holly: 'Holly', o_candycane: 'Candy cane', o_snowflake: 'Snowflake', o_stocking: 'Stocking', o_gift: 'Gift',
-  },
-  vi: {
-    lang_switch: 'English', loading: 'Đang tải…', retry: 'Thử lại', close: 'Đóng',
-    kicker: 'Cây của', title: '{name} — Cây điều ước',
-    explain_sealed: 'Điều ước được giữ kín đến ngày mở cây.',
-    explain_open: 'Cây đã mở.',
-    explain_opening: 'Đang mở…',
-    tabs_label: 'Chọn cây', tab: 'Cây {n}', tree_label: 'Cây thông Noel treo những điều ước',
-    count_zero: 'Chưa có điều ước nào', count_one: '1 điều ước', count_many: '{n} điều ước',
-    countdown_label: 'Thời gian còn lại đến khi mở cây', days: 'ngày', hours: 'giờ', minutes: 'phút', seconds: 'giây', opens_on: 'Mở ngày {date}',
-    send_wish: 'Gửi điều ước', copy_link: 'Sao chép link', copied: 'Đã sao chép link', copy_manual: 'Sao chép link này:', make_own: 'Cây của tôi / Tạo cây',
-    cards_label: 'Điều ước trên cây này', from: 'Từ {name}', anonymous: 'Ẩn danh', orn_open: 'Đọc điều ước của {name}',
-    cards_error: 'Chưa tải được điều ước. Đổi cây hoặc tải lại trang để thử lại.',
-    missing_title: 'Chưa có cây ở đây', missing_body: 'Link này không khớp với cây nào. Kiểm tra lại địa chỉ, hoặc tự trồng một cây.',
-    home_empty_title: 'Trồng cây đầu tiên', home_empty_body: 'Tạo cây của bạn, gửi link cho bạn bè và để họ treo những điều ước được niêm phong.',
-    error_title: 'Chưa tải được cây', error_body: 'Kiểm tra kết nối mạng rồi thử lại.',
-    w_name: 'Tên của bạn', w_name_ph: 'Để trống = ẩn danh', w_message: 'Điều ước', w_message_ph: 'Viết điều ước',
-    w_ornament: 'Chọn món trang trí', hang: 'Treo lên cây', sending: 'Đang treo…',
-    wish_empty: 'Bạn chưa viết điều ước.', wish_failed: 'Điều ước chưa được lưu. Kiểm tra mạng rồi thử lại.',
-    done_title: 'Điều ước đã lên cây', done_sealed: 'Giữ kín đến ngày {date}.', done_open: 'Cây đã mở nên đọc được ngay.', done_close: 'Quay lại cây',
-    signin_title: 'Đăng nhập để xem hoặc tạo cây',
-    email: 'Email', send_link: 'Gửi link cho tôi', sending_link: 'Đang gửi…',
-    check_email: 'Kiểm tra email', link_sent: 'Mở link đã gửi tới {email}.',
-    google: 'Tiếp tục với Google', phone: 'Số điện thoại', send_code: 'Nhắn mã cho tôi', code: 'Mã trong tin nhắn', verify_code: 'Đăng nhập',
-    bad_email: 'Nhập địa chỉ email hợp lệ.', bad_phone: 'Nhập số kèm mã quốc gia, ví dụ +84901234567.',
-    signin_failed: 'Đăng nhập chưa thành công. Hãy thử lại.', rate_limited: 'Gửi email đăng nhập quá nhiều lần. Đợi một lúc rồi thử lại.',
-    link_expired: 'Link đăng nhập đã hết hạn hoặc đã được dùng. Hãy yêu cầu link mới.', back: 'Quay lại cây',
-    me_title: 'Cây của tôi',
-    f_name: 'Tên của bạn', f_slug: 'Tên link', f_date: 'Ngày mở cây', create: 'Trồng cây', creating: 'Đang trồng…',
-    bad_name: 'Nhập tên, tối đa 60 ký tự.', bad_slug: 'Dùng 3–40 ký tự: a–z, 0–9 và dấu gạch nối, không bắt đầu hay kết thúc bằng gạch nối.',
-    bad_date: 'Chọn một ngày sau hôm nay.', slug_taken: 'Tên link này đã có người dùng. Hãy chọn tên khác.', create_failed: 'Chưa tạo được cây. Hãy thử lại.',
-    your_link: 'Link của bạn', open_tree: 'Mở cây của tôi',
-    stat_wishes: 'Điều ước', stat_date: 'Ngày mở', me_failed: 'Chưa tải được cây của bạn. Tải lại trang để thử lại.', sign_out: 'Đăng xuất',
-    o_bow: 'Nơ đỏ', 'o_bauble-red': 'Quả châu đỏ', 'o_bauble-green': 'Quả châu xanh', o_star: 'Ngôi sao', o_bell: 'Chuông', o_wreath: 'Vòng lá',
-    o_candle: 'Nến', o_holly: 'Lá nhựa ruồi', o_candycane: 'Kẹo gậy', o_snowflake: 'Bông tuyết', o_stocking: 'Chiếc tất', o_gift: 'Hộp quà',
-  },
+  loading: 'Loading…', retry: 'Try again', close: 'Close',
+  kicker: 'The tree of', title: '{name} — Wish Tree',
+  explain_sealed: 'Wishes stay sealed until opening day.',
+  explain_open: 'The tree is open.',
+  explain_opening: 'Opening…',
+  tabs_label: 'Choose a tree', tab: 'Tree {n}', tree_label: 'Christmas tree with wishes hanging on it',
+  count_zero: 'No wishes yet', count_one: '1 wish', count_many: '{n} wishes',
+  countdown_label: 'Time until the tree opens', days: 'days', hours: 'hours', minutes: 'minutes', seconds: 'seconds', opens_on: 'Opens {date}',
+  send_wish: 'Send a wish', copy_link: 'Copy link', copied: 'Link copied', copy_manual: 'Copy this link:', make_own: 'My tree / Create one',
+  cards_label: 'Wishes on this tree', from: 'From {name}', anonymous: 'Anonymous', orn_open: 'Read the wish from {name}',
+  cards_error: 'The wishes did not load. Switch tabs or refresh to try again.',
+  missing_title: 'No tree here yet', missing_body: 'This link does not match any tree. Check the address, or plant your own.',
+  home_empty_title: 'Plant the first tree', home_empty_body: 'Get your own tree, share its link, and let friends hang sealed wishes on it.',
+  error_title: 'The tree did not load', error_body: 'Check your connection and try again.',
+  w_name: 'Your name', w_name_ph: 'Blank = anonymous', w_message: 'Your wish', w_message_ph: 'Write your wish',
+  w_ornament: 'Pick an ornament', hang: 'Hang it on the tree', sending: 'Hanging…',
+  wish_empty: 'Write your wish first.', wish_failed: 'Your wish was not saved. Check your connection and try again.',
+  done_title: 'Your wish is on the tree', done_sealed: 'Sealed until {date}.', done_open: 'The tree is open, so it can be read now.', done_close: 'Back to the tree',
+  signin_title: 'Sign in to see or create your tree',
+  email: 'Email', send_link: 'Send me a link', sending_link: 'Sending…',
+  check_email: 'Check your email', link_sent: 'Open the link we sent to {email}.',
+  google: 'Continue with Google', phone: 'Phone number', send_code: 'Text me a code', code: 'Code from the text', verify_code: 'Sign in',
+  bad_email: 'Enter a valid email address.', bad_phone: 'Enter the number with its country code, like +84901234567.',
+  signin_failed: 'Sign-in did not go through. Try again.', rate_limited: 'Too many sign-in emails. Wait a while and try again.',
+  link_expired: 'That sign-in link has expired or was already used. Ask for a new one.', back: 'Back to the tree',
+  me_title: 'My tree',
+  f_name: 'Your name', f_slug: 'Link name', f_date: 'Opening day', create: 'Plant my tree', creating: 'Planting…',
+  bad_name: 'Enter a name, up to 60 characters.', bad_slug: 'Use 3–40 characters: a–z, 0–9 and hyphens, not starting or ending with a hyphen.',
+  bad_date: 'Choose a day after today.', slug_taken: 'That link name is taken. Try another one.', create_failed: 'The tree was not created. Try again.',
+  your_link: 'Your link', open_tree: 'Open my tree',
+  stat_wishes: 'Wishes', stat_date: 'Opens', me_failed: 'Your tree did not load. Refresh to try again.', sign_out: 'Sign out',
+  o_bow: 'Red bow', 'o_bauble-red': 'Red bauble', 'o_bauble-green': 'Green bauble', o_star: 'Star', o_bell: 'Bell', o_wreath: 'Wreath',
+  o_candle: 'Candle', o_holly: 'Holly', o_candycane: 'Candy cane', o_snowflake: 'Snowflake', o_stocking: 'Stocking', o_gift: 'Gift',
 };
 
 /* ---------- small helpers ---------- */
@@ -89,24 +52,14 @@ const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const BASE = location.origin + location.pathname.replace(/index\.html$/, '');
 const treeUrl = (slug) => `${BASE}?t=${encodeURIComponent(slug)}`;
 
-let lang = readLang();
-function readLang() {
-  try {
-    const saved = localStorage.getItem('wishtree.lang');
-    if (saved === 'vi' || saved === 'en') return saved;
-  } catch { /* storage blocked: fall through to the browser language */ }
-  return (navigator.language || '').toLowerCase().startsWith('vi') ? 'vi' : 'en';
-}
-
 function t(key, vars = {}) {
   // Single pass: braces inside a stranger's name are never expanded again.
-  return (STR[lang][key] ?? key).replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m));
+  return (STR[key] ?? key).replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m));
 }
 
-const formatDate = (iso) => new Intl.DateTimeFormat(lang === 'vi' ? 'vi-VN' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(iso));
+const formatDate = (iso) => new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(iso));
 
-// Every visible string goes through these two, so switching language re-translates in place.
-// vars.date and vars.nameKey are resolved at translation time because they depend on the language.
+// Every visible string goes through these two. vars.date and vars.nameKey are resolved at paint time.
 function paint(el) {
   const { i18n, i18nPh, i18nLabel, date } = el.dataset;
   const vars = { ...el.i18nVars };
@@ -123,8 +76,7 @@ function setText(el, key, vars) {
   paint(el);
   el.hidden = false;
 }
-function applyLang() {
-  document.documentElement.lang = lang;
+function applyText() {
   document.querySelectorAll('[data-i18n],[data-i18n-ph],[data-i18n-label],[data-date]').forEach(paint);
   if (state.tree) document.title = t('title', { name: state.tree.owner_name });
 }
@@ -605,7 +557,7 @@ async function treeView() {
 
   const due = new Date(data.reveal_at) <= Date.now();
   renderTree({ pop: due ? null : 'all' });
-  applyLang();
+  applyText();
   show('view-tree');
   tick();
   setInterval(tick, 1000);
@@ -792,13 +744,8 @@ function startSnow() {
 async function main() {
   startSnow();
   $('home-link').href = BASE;
-  $('lang-btn').addEventListener('click', () => {
-    lang = lang === 'vi' ? 'en' : 'vi';
-    try { localStorage.setItem('wishtree.lang', lang); } catch { /* not remembered */ }
-    applyLang();
-  });
   $('message-retry').addEventListener('click', () => location.reload());
-  applyLang();
+  applyText();
   // Read before createClient(), which consumes the URL fragment. A magic link that falls back
   // to the site root (no ?view=me) must still land on the owner's page.
   const linkFailed = /[#&]error(_code|_description)?=/.test(location.hash);

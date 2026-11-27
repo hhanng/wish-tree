@@ -90,7 +90,7 @@ and add `https://wish-tree-pi.vercel.app/**` to the redirect URLs.
 | Path | What it is |
 |---|---|
 | `index.html` | markup and the twelve ornament drawings (SVG symbols) |
-| `assets/app.js` | strings in Vietnamese and English, the painted tree, all screens |
+| `assets/app.js` | interface strings, the painted tree, all screens |
 | `assets/style.css` | styling |
 | `schema.sql` | reference copy of the database |
 | `docs/USER_STORIES.md` | who uses the app and what each of them must be able to do |
